@@ -3,6 +3,7 @@ package com.harshit.moviebooking.service.impl;
 import com.harshit.moviebooking.dto.movie.MovieRequestDto;
 import com.harshit.moviebooking.dto.movie.MovieResponseDto;
 import com.harshit.moviebooking.entity.Movie;
+import com.harshit.moviebooking.exception.MovieNotFoundException;
 import com.harshit.moviebooking.mapper.MovieMapper;
 import com.harshit.moviebooking.repository.MovieRepo;
 import com.harshit.moviebooking.service.MovieService;
@@ -41,7 +42,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponseDto getMovieById(Long id) {
 
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found"));
+                .orElseThrow(() -> new MovieNotFoundException(id));
 
         return MovieMapper.toResponseDto(movie);
     }
@@ -59,7 +60,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponseDto updateMovie(Long id, MovieRequestDto requestDto) {
 
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found"));
+                .orElseThrow(() -> new MovieNotFoundException(id));
 
         movie.setTitle(requestDto.getTitle());
         movie.setSynopsis(requestDto.getSynopsis());
@@ -81,7 +82,7 @@ public class MovieServiceImpl implements MovieService {
     public void deleteMovie(Long id) {
 
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found"));
+                .orElseThrow(() -> new MovieNotFoundException(id));
 
         movieRepository.delete(movie);
     }
