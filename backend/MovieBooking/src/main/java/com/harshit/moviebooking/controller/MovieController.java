@@ -3,6 +3,7 @@ package com.harshit.moviebooking.controller;
 import com.harshit.moviebooking.dto.movie.MovieRequestDto;
 import com.harshit.moviebooking.dto.movie.MovieResponseDto;
 import com.harshit.moviebooking.service.MovieService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class MovieController {
 
     @PostMapping
     public ResponseEntity<MovieResponseDto> createMovie(
-            @RequestBody MovieRequestDto movieRequestDto) {
+           @Valid @RequestBody MovieRequestDto movieRequestDto) {
 
         MovieResponseDto response = movieService.createMovie(movieRequestDto);
 
