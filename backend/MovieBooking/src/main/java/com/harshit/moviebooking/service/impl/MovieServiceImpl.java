@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class MovieServiceImpl implements MovieService {
@@ -34,5 +35,54 @@ public class MovieServiceImpl implements MovieService {
         Movie savedMovie = movieRepository.save(movie);
 
         return MovieMapper.toResponseDto(savedMovie);
+    }
+
+    @Override
+    public MovieResponseDto getMovieById(Long id) {
+
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        return MovieMapper.toResponseDto(movie);
+    }
+
+    @Override
+    public List<MovieResponseDto> getAllMovies() {
+
+        return movieRepository.findAll()
+                .stream()
+                .map(MovieMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public MovieResponseDto updateMovie(Long id, MovieRequestDto requestDto) {
+
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        movie.setTitle(requestDto.getTitle());
+        movie.setSynopsis(requestDto.getSynopsis());
+        movie.setReleaseDate(requestDto.getReleaseDate());
+        movie.setRuntimeMinutes(requestDto.getRuntimeMinutes());
+        movie.setLanguage(requestDto.getLanguage());
+        movie.setCountryOfOrigin(requestDto.getCountryOfOrigin());
+        movie.setContentRating(requestDto.getContentRating());
+        movie.setPosterUrl(requestDto.getPosterUrl());
+
+        movie.setUpdatedAt(LocalDateTime.now());
+
+        Movie updatedMovie = movieRepository.save(movie);
+
+        return MovieMapper.toResponseDto(updatedMovie);
+    }
+
+    @Override
+    public void deleteMovie(Long id) {
+
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        movieRepository.delete(movie);
     }
 }
