@@ -1,20 +1,48 @@
 # Movie Backend Requirements
 
+Product requirements for the Movie Booking Backend project.
+
+> **Note:** This document describes target requirements. For what is implemented today, see [README.md](../README.md) and the **Implementation Status** section below.
+
+---
+
+## Implementation Status (Current Codebase)
+
+| Requirement Area | Status |
+|------------------|--------|
+| Register / Login | Implemented |
+| JWT issuance | Implemented |
+| Endpoint authorization | Partial — not enforced yet |
+| Movie browse / view / CRUD | Implemented |
+| Movie pagination / sorting | Implemented |
+| Movie ratings (1–10) | Implemented |
+| Movie title search API | Not exposed |
+| Genre filter / recommendations | Planned |
+| Reviews | Planned |
+| Watchlist / Favorites | Planned |
+| User profile management | Planned |
+| Logout / refresh tokens | Planned |
+| Booking / theatres / payments | Planned |
+| Swagger / OpenAPI | Planned |
+| Broad automated test suite | Planned (context load test only) |
+
+---
+
 ## 1. Project Overview
 
 ### Project Name
 
-Movie Backend
+Movie Booking Backend
 
 ### Objective
 
-Build a production-ready RESTful backend for a movie platform where users can discover movies, manage personal collections, interact with reviews, and receive personalized recommendations.
+Build a RESTful backend for a movie platform where users can discover movies, manage personal collections, interact with reviews, and receive personalized recommendations.
 
-The project should demonstrate backend engineering practices including authentication, authorization, database design, REST API design, validation, testing, Dockerization, and deployment readiness.
+The project demonstrates backend engineering practices including authentication, authorization, database design, REST API design, validation, testing, Dockerization, and deployment readiness.
 
 ---
 
-# 2. Stakeholders
+## 2. Stakeholders
 
 - Guest User
 - Registered User
@@ -22,172 +50,196 @@ The project should demonstrate backend engineering practices including authentic
 
 ---
 
-# 3. User Roles
+## 3. User Roles
 
-## Guest
+### Guest
 
 Can use the application without logging in.
 
-## Registered User
+### Registered User
 
 Has an account and can access personalized features.
 
-## Administrator
+### Administrator
 
 Has complete control over platform content.
 
+**Current implementation:** `USER` and `ADMIN` roles exist in the database. Endpoint-level role enforcement is not active yet.
+
 ---
 
-# 4. Functional Requirements
+## 4. Functional Requirements
 
-## 4.1 Authentication
+### 4.1 Authentication
 
 The system shall allow users to:
 
-- Register
-- Login
-- Logout
-- Refresh access tokens
-- Change password
-- Reset forgotten password (future enhancement)
+| Capability | Status |
+|------------|--------|
+| Register | Implemented |
+| Login | Implemented |
+| Logout | Planned |
+| Refresh access tokens | Planned |
+| Change password | Planned |
+| Reset forgotten password | Planned (future enhancement) |
 
 ---
 
-## 4.2 User Profile
+### 4.2 User Profile
 
 Users shall be able to:
 
-- View profile
-- Update profile
-- Upload profile picture (future)
-- Delete account
+- View profile — **Planned**
+- Update profile — **Planned**
+- Upload profile picture — **Planned (future)**
+- Delete account — **Planned**
 
 ---
 
-## 4.3 Movie Management
+### 4.3 Movie Management
 
 Users shall be able to:
 
-- Browse movies
-- View movie details
-- Search by title
-- Filter by genre
-- Filter by language
-- Filter by release year
-- Filter by rating
-- Sort by popularity
-- Sort by release date
-- Sort alphabetically
+| Capability | Status |
+|------------|--------|
+| Browse movies | Implemented |
+| View movie details | Implemented |
+| Search by title | Planned (service method exists; API not exposed) |
+| Filter by genre | Planned |
+| Filter by language | Planned |
+| Filter by release year | Planned |
+| Filter by rating | Planned |
+| Sort by popularity | Planned |
+| Sort by release date | Implemented (via list sorting) |
+| Sort alphabetically | Implemented (via list sorting) |
 
 Administrators shall be able to:
 
-- Add movies
-- Update movies
-- Delete movies
+| Capability | Status |
+|------------|--------|
+| Add movies | Implemented (no admin-only restriction yet) |
+| Update movies | Implemented (no admin-only restriction yet) |
+| Delete movies | Implemented (no admin-only restriction yet) |
 
 ---
 
-## 4.4 Reviews
+### 4.4 Reviews
 
 Users shall be able to:
 
-- Create review
-- Edit own review
-- Delete own review
+- Create review — **Planned**
+- Edit own review — **Planned**
+- Delete own review — **Planned**
 
 Guests:
 
-- View reviews only
+- View reviews only — **Planned**
 
 Admins:
 
-- Delete inappropriate reviews
+- Delete inappropriate reviews — **Planned**
 
 ---
 
-## 4.5 Ratings
+### 4.5 Ratings
 
 Users shall be able to:
 
-- Give rating
-- Update rating
-- Remove rating
+| Capability | Status |
+|------------|--------|
+| Give rating | Implemented |
+| Update rating | Implemented |
+| Remove rating | Planned |
 
-Movie rating should automatically update.
+Movie rating aggregates (`average_rating`, `rating_count`) shall update automatically — **Implemented**
 
 ---
 
-## 4.6 Watchlist
+### 4.6 Watchlist
 
 Users shall be able to:
 
-- Add movie
-- Remove movie
-- View watchlist
+- Add movie — **Planned**
+- Remove movie — **Planned**
+- View watchlist — **Planned**
 
 ---
 
-## 4.7 Favorites
+### 4.7 Favorites
 
 Users shall be able to:
 
-- Add favorite
-- Remove favorite
-- View favorites
+- Add favorite — **Planned**
+- Remove favorite — **Planned**
+- View favorites — **Planned**
 
 ---
 
-## 4.8 Recommendation System (Basic)
+### 4.8 Recommendation System (Basic)
 
 Recommend movies based on:
 
-- Genres
-- Highest ratings
-- User watch history
+- Genres — **Planned**
+- Highest ratings — **Planned**
+- User watch history — **Planned**
 
 ---
 
-# 5. Non-Functional Requirements
+## 5. Non-Functional Requirements
 
-- RESTful API
-- Layered Architecture
-- PostgreSQL
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- Docker
-- Validation
-- Logging
-- Exception Handling
-- Pagination
-- Sorting
-- Unit Tests
-- Integration Tests
-- API Documentation
-
----
-
-# 6. Business Rules
-
-- Email must be unique.
-- Username must be unique.
-- One user can rate a movie only once.
-- One user can review a movie only once.
-- Ratings must be between 1 and 10.
-- Guests cannot create reviews.
-- Guests cannot modify data.
-- Only admins may delete movies.
-- Deleted users should not remove movie data.
+| Requirement | Status |
+|-------------|--------|
+| RESTful API | Implemented |
+| Layered architecture | Implemented |
+| PostgreSQL | Implemented |
+| Spring Boot | Implemented |
+| Spring Security | Implemented (partial authorization) |
+| JWT authentication | Implemented (issuance; enforcement planned) |
+| Docker | Implemented |
+| Validation | Implemented |
+| Logging | Partial (SLF4J not used consistently in services) |
+| Exception handling | Partial (`GlobalExceptionHandler` exists) |
+| Pagination | Implemented |
+| Sorting | Implemented |
+| Unit tests | Planned (context load test only) |
+| Integration tests | Planned |
+| API documentation (Swagger/OpenAPI) | Planned |
 
 ---
 
-# 7. Success Criteria
+## 6. Business Rules
 
-The project is complete when:
+| Rule | Status |
+|------|--------|
+| Email must be unique | Implemented |
+| Username must be unique | Implemented |
+| One user can rate a movie only once | Implemented |
+| One user can review a movie only once | Planned |
+| Ratings must be between 1 and 10 | Implemented |
+| Guests cannot create reviews | Planned |
+| Guests cannot modify data | Planned (authorization not enforced yet) |
+| Only admins may delete movies | Planned (not enforced yet) |
+| Deleted users should not remove movie data | Planned |
 
-- All endpoints function correctly.
-- Authentication works securely.
-- Database is normalized.
-- Docker deployment succeeds.
-- Tests pass.
-- API documentation is complete.
+---
+
+## 7. Success Criteria
+
+The project target is complete when:
+
+- All planned endpoints function correctly
+- Authentication and authorization work securely
+- Database is normalized
+- Docker deployment succeeds
+- Tests pass with meaningful coverage
+- API documentation is complete
+
+**Current state:** Core auth, movie, and rating flows are implemented. Booking, reviews, profile features, enforced security, and full test/documentation coverage remain planned.
+
+---
+
+## Related Documentation
+
+- [api-design.md](api-design.md) — implemented endpoints
+- [database-design.md](database-design.md) — schema design
+- [changelog.md](changelog.md) — version history

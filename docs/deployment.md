@@ -1,5 +1,7 @@
 # Deployment
 
+Docker deployment guide for the application in `backend/MovieBooking/`.
+
 ## Technologies
 
 - Docker
@@ -7,48 +9,74 @@
 
 ---
 
-## Build
+## Prerequisites
 
-```
+- Docker
+- Docker Compose
+
+---
+
+## Build Image
+
+From `backend/MovieBooking/`:
+
+```bash
 docker build -t moviebooking .
 ```
 
 ---
 
-## Run
+## Run with Docker Compose
 
+From `backend/MovieBooking/`:
+
+```bash
+docker compose up -d --build
 ```
-docker compose up --build
+
+Stop services:
+
+```bash
+docker compose down
 ```
 
 ---
 
 ## Services
 
-Application
+| Service | URL |
+|---------|-----|
+| Application | `http://localhost:8080` |
+| PostgreSQL | `localhost:5432` |
 
-```
-localhost:8080
-```
+Docker Compose service names:
 
-Database
-
-```
-localhost:5432
-```
+| Container | Purpose |
+|-----------|---------|
+| `moviebooking-api` | Spring Boot application |
+| `moviebooking-db` | PostgreSQL 16 database |
 
 ---
 
-Environment variables
+## Environment Variables
 
-```
-DB_URL
+Configured in `docker-compose.yml` for the `app` service:
 
-DB_USERNAME
+| Variable | Purpose |
+|----------|---------|
+| `DB_URL` | JDBC URL (`jdbc:postgresql://postgres:5432/movie_booking`) |
+| `DB_USERNAME` | Database username |
+| `DB_PASSWORD` | Database password |
+| `JWT_SECRET` | JWT signing secret |
+| `JWT_EXPIRATION` | Token lifetime in milliseconds |
 
-DB_PASSWORD
+These map to Spring Boot properties via externalized configuration (`spring.datasource.*`, `jwt.*`).
 
-JWT_SECRET
+For local (non-Docker) setup, see [setup.md](setup.md) and `backend/MovieBooking/.env.example`.
 
-JWT_EXPIRATION
-```
+---
+
+## Related Documentation
+
+- [setup.md](setup.md) — local development setup
+- [README.md](../README.md) — project overview
