@@ -1,40 +1,61 @@
-# Development Environment Setup
+# Project Setup
 
-## Date
+## Requirements
 
-2026-07-06
+- Java 21
+- Maven 3.9+
+- PostgreSQL 16+
+- IntelliJ IDEA
+- Git
+- Postman
 
-## Operating System
+---
 
-- Linux Mint
+## Clone Repository
 
-## Installed Software
+```bash
+git clone https://github.com/<your-username>/movie-booking-backend.git
+cd movie-booking-backend
+```
 
-| Tool | Version |
-|------|---------|
-| Java | 26 |
-| Maven | 3.8.7 |
-| Git | 2.43.0 |
-| PostgreSQL | 18.4 |
-| Docker | 29.1.3 |
-| Docker Compose | 2.40.3 |
+---
 
-## Git Configuration
+## Configure Database
 
-Global username configured ✔️
+Create a PostgreSQL database.
 
-Global email configured ✔️
+```sql
+CREATE DATABASE movie_booking;
+```
 
-## Verification
+Update:
 
-- `java -version` ✔️
-- `javac -version` ✔️
-- `mvn -version` ✔️
-- `git --version` ✔️
-- `psql --version` ✔️
-- `docker --version` ✔️
-- `docker compose version` ✔️
+```
+src/main/resources/application.properties
+```
 
-## Notes
+```
+spring.datasource.url=jdbc:postgresql://localhost:5432/movie_booking
+spring.datasource.username=postgres
+spring.datasource.password=your_password
+```
 
-Development environment successfully configured.
+---
+
+## Run
+
+```
+mvn spring-boot:run
+```
+
+or
+
+```
+./mvnw spring-boot:run
+```
+
+Application runs on
+
+```
+http://localhost:8080
+```

@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+
+    container_name: moviebooking-db
+
+    environment:
+      POSTGRES_DB: movie_booking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 000
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+
+  app:
+
+    build: .
+
+    container_name: moviebooking-api
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/movie_booking
+      DB_USERNAME: postgres
+      DB_PASSWORD: 000
+      JWT_SECRET: ThisIsAVeryLongSecretKeyForMovieBookingApplication2026
+      JWT_EXPIRATION: 86400000
+
+volumes:
+  postgres-data:
