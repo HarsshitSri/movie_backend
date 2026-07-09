@@ -1,64 +1,262 @@
-# Movie Backend
+# 🎬 Movie Booking Backend API
 
-A production-ready RESTful backend application for managing movies, user authentication, ratings, reviews, favorites, and watchlists.
+A RESTful backend for a movie ticket booking platform built with Java Spring Boot.
 
-## Tech Stack
+The project demonstrates backend development concepts including authentication, authorization, CRUD operations, pagination, DTO mapping, validation, and relational database design.
 
-- Java 26
-- Spring Boot
-- PostgreSQL
-- Maven
-- Docker
-- Spring Security
-- JWT
-- Hibernate / JPA
+---
 
 ## Features
 
-- User Authentication & Authorization
-- Role-Based Access Control
-- Movie Management
-- Ratings
-- Reviews
-- Favorites
-- Watchlists
-- Search & Filtering
+- User Registration
+- User Login
+- JWT Authentication
+- BCrypt Password Encryption
+- Role-Based Authorization
+- Movie CRUD Operations
+- Pagination & Sorting
+- Request Validation
+- PostgreSQL Integration
+- Layered Architecture
 
-## Project Status
+---
 
-🚧 Planning & Design Phase
+## Tech Stack
 
-## Documentation
+| Technology | Version |
+|------------|----------|
+| Java | 21 |
+| Spring Boot | 3.5.x |
+| Spring Security | 6 |
+| Spring Data JPA | Hibernate |
+| PostgreSQL | 16+ |
+| Maven | 3.9+ |
+| JWT | JJWT |
+| Lombok | Latest |
 
-- Requirements
-- Database Design
-- Architecture
-- API Design
-- Deployment
-- Testing
+---
 
 ## Project Structure
 
 ```
-Movie_Backend/
-├── assets/
-├── backend/
-├── docs/
-├── .gitignore
-└── README.md
+src
+├── config
+├── controller
+├── dto
+├── entity
+├── enums
+├── repository
+├── security
+├── service
+│   └── impl
+└── resources
 ```
 
-## Roadmap
+---
 
-- [x] Environment Setup
-- [x] Project Planning
-- [x] Initial Database Design
-- [ ] Spring Boot Setup
-- [ ] Authentication
-- [ ] Movie APIs
-- [ ] Ratings
-- [ ] Reviews
-- [ ] Favorites
-- [ ] Watchlists
-- [ ] Docker Deployment
-- [ ] Testing
+## Authentication
+
+JWT Authentication is used to secure protected endpoints.
+
+### Public Endpoints
+
+```
+POST /api/auth/register
+POST /api/auth/login
+```
+
+### Protected Endpoints
+
+```
+GET    /api/movies
+GET    /api/movies/{id}
+POST   /api/movies
+PUT    /api/movies/{id}
+DELETE /api/movies/{id}
+```
+
+Include the JWT token in the request header:
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+---
+
+## API Example
+
+### Register
+
+```http
+POST /api/auth/register
+```
+
+```json
+{
+  "firstName": "Harshit",
+  "lastName": "Srivastava",
+  "username": "harshit",
+  "email": "harshit@example.com",
+  "password": "Password@123",
+  "dateOfBirth": "2003-07-25"
+}
+```
+
+---
+
+### Login
+
+```http
+POST /api/auth/login
+```
+
+```json
+{
+  "email": "harshit@example.com",
+  "password": "Password@123"
+}
+```
+
+---
+
+### Create Movie
+
+```http
+POST /api/movies
+```
+
+```json
+{
+  "title": "Interstellar",
+  "description": "Science Fiction",
+  "duration": 169,
+  "language": "English",
+  "genre": "Sci-Fi",
+  "releaseDate": "2014-11-07"
+}
+```
+
+---
+
+## Database
+
+PostgreSQL is used as the relational database.
+
+The application uses Spring Data JPA with Hibernate for ORM.
+
+---
+
+## Security
+
+- BCrypt Password Encoding
+- Stateless Authentication
+- JWT Token Generation
+- JWT Request Filter
+- Spring Security Filter Chain
+
+---
+
+## Validation
+
+Bean Validation (Jakarta Validation) is used to validate incoming requests.
+
+Examples:
+
+- Email format validation
+- Password validation
+- Required fields
+- Date validation
+
+---
+
+## Future Improvements
+
+- Theatre Management
+- Screens
+- Seats
+- Show Scheduling
+- Ticket Booking
+- Payment Integration
+- Email Notifications
+- Refresh Tokens
+- Swagger/OpenAPI
+- Global Exception Handling
+- Unit & Integration Testing
+- CI/CD Pipeline
+- Docker Deployment
+- Kubernetes Deployment
+
+---
+
+## Getting Started
+
+### Clone
+
+```bash
+git clone https://github.com/<your-username>/movie-booking-backend.git
+```
+
+### Enter Project
+
+```bash
+cd movie-booking-backend
+```
+
+### Configure Database
+
+Update `application.properties`
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/movie_booking
+spring.datasource.username=postgres
+spring.datasource.password=your_password
+
+jwt.secret=your-secret-key
+jwt.expiration=86400000
+```
+
+### Run
+
+```bash
+mvn spring-boot:run
+```
+
+or
+
+```bash
+./mvnw spring-boot:run
+```
+
+---
+
+## Architecture
+
+```
+Client
+   │
+   ▼
+Controller
+   │
+   ▼
+Service
+   │
+   ▼
+Repository
+   │
+   ▼
+PostgreSQL
+```
+
+---
+
+## Author
+
+Harshit Srivastava
+
+Backend Developer (Java | Spring Boot)
+
+---
+
+## License
+
+This project is intended for educational and portfolio purposes.
