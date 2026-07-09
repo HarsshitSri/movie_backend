@@ -7,6 +7,8 @@ import com.harshit.moviebooking.exception.MovieNotFoundException;
 import com.harshit.moviebooking.mapper.MovieMapper;
 import com.harshit.moviebooking.repository.MovieRepo;
 import com.harshit.moviebooking.service.MovieService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -48,12 +50,10 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieResponseDto> getAllMovies() {
+    public Page<MovieResponseDto> getAllMovies(Pageable pageable) {
 
-        return movieRepository.findAll()
-                .stream()
-                .map(MovieMapper::toResponseDto)
-                .toList();
+        return movieRepository.findAll(pageable)
+                .map(MovieMapper::toResponseDto);
     }
 
     @Override
@@ -86,4 +86,14 @@ public class MovieServiceImpl implements MovieService {
 
         movieRepository.delete(movie);
     }
+
+    @Override
+    public List<MovieResponseDto> searchMoviesByTitle(String title) {
+
+        return movieRepository.findByTitleContainingIgnoreCase(title)
+                .stream()
+                .map(MovieMapper::toResponseDto)
+                .toList();
+    }
 }
+

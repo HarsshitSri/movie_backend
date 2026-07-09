@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "movies")
@@ -59,5 +60,8 @@ public class Movie {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "movie")
+    private List<Rating> ratings;
 }
 

@@ -275,4 +275,75 @@ Only information that directly describes a movie is stored in this table. Relate
 | Index (`release_date`) | Optimizes sorting and filtering by release date. |
 | Index (`average_rating`) | Optimizes ranking and recommendation queries. |
 
-...
+# Ratings
+
+## Purpose
+
+The `ratings` table stores the ratings given by users to movies. It acts as a junction table between the `users` and `movies` tables while also storing additional information about the relationship, specifically the rating value.
+
+Each user can rate a movie only once, while a movie can receive ratings from many users. The data stored in this table is used to calculate and maintain the cached `average_rating` and `rating_count` values in the `movies` table.
+
+---
+
+## Columns
+
+| Column | Data Type | Constraints | Description |
+|---------|-----------|-------------|-------------|
+| id | BIGSERIAL | PRIMARY KEY | Unique identifier for each rating. |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | References the user who submitted the rating. |
+| movie_id | BIGINT | NOT NULL, FOREIGN KEY | References the movie being rated. |
+| rating | INTEGER | NOT NULL | Rating value between 1 and 10. |
+| created_at | TIMESTAMP | NOT NULL | Timestamp when the rating was created. |
+| updated_at | TIMESTAMP | NOT NULL | Timestamp when the rating was last updated. |
+
+---
+
+## Relationships
+
+- One User → Many Ratings (1:N)
+- One Movie → Many Ratings (1:N)
+- One Rating → One User (N:1)
+- One Rating → One Movie (N:1)
+
+---
+
+## Constraints
+
+- `id` is the primary key.
+- `user_id` references `users(id)`.
+- `movie_id` references `movies(id)`.
+- `rating` must be between **1** and **10**.
+- A user can rate the same movie only once.
+- The combination of (`user_id`, `movie_id`) must be unique.
+
+---
+
+## Sample Data
+
+| id | user_id | movie_id | rating |
+|----|---------|----------|--------|
+| 1 | 5 | 1 | 9 |
+| 2 | 8 | 1 | 8 |
+| 3 | 5 | 3 | 10 |
+
+---
+
+## Design Decisions
+
+- A separate `ratings` table is used instead of storing ratings directly in the `movies` table because ratings belong to the relationship between a user and a movie.
+- The table serves as a junction table while also storing additional attributes, making a direct Many-to-Many relationship inappropriate.
+- Each user is allowed only one rating per movie through a composite unique constraint on (`user_id`, `movie_id`).
+- The `average_rating` and `rating_count` values are intentionally cached in the `movies` table to improve read performance. These values are updated whenever a rating is created, updated, or deleted.
+- Ratings are restricted to whole numbers between **1** and **10** in Version 1 for simplicity. Decimal ratings can be introduced in a future version if required.
+- `created_at` and `updated_at` are stored to maintain an audit trail and support future features such as rating history.
+
+---
+
+## Indexes
+
+| Index | Purpose |
+|--------|---------|
+| Primary Key (`id`) | Fast lookup by rating ID. |
+| Index (`user_id`) | Improves lookups of ratings submitted by a user. |
+| Index (`movie_id`) | Improves retrieval of ratings for a movie. |
+| Unique Composite Index (`user_id`, `movie_id`) | Prevents duplicate ratings by the same user for the same movie and speeds up existence checks. |
