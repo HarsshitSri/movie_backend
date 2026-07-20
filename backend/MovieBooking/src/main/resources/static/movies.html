@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movies · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Movies</h1>
+      <p>Paginated catalog from <code>GET /api/movies</code>.</p>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label for="page">Page</label>
+          <input id="page" type="number" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label for="size">Size</label>
+          <input id="size" type="number" min="1" max="50" value="10" />
+        </div>
+        <div class="field">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option value="id">id</option>
+            <option value="title">title</option>
+            <option value="releaseDate">releaseDate</option>
+            <option value="averageRating">averageRating</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="direction">Direction</label>
+          <select id="direction">
+            <option value="asc">asc</option>
+            <option value="desc">desc</option>
+          </select>
+        </div>
+        <button class="btn" type="button" id="reload-btn">Load</button>
+        <a class="btn btn-secondary" href="/movie-form.html">Add movie</a>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Year</th>
+              <th>Rating</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="movies-body">
+            <tr><td colspan="5" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" id="page-info"></p>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    async function loadMovies() {
+      const msg = document.getElementById("msg");
+      const body = document.getElementById("movies-body");
+      clearMessage(msg);
+      const page = document.getElementById("page").value || 0;
+      const size = document.getElementById("size").value || 10;
+      const sort = document.getElementById("sort").value;
+      const direction = document.getElementById("direction").value;
+      const url =
+        "/api/movies?page=" + page +
+        "&size=" + size +
+        "&sort=" + encodeURIComponent(sort) +
+        "&direction=" + encodeURIComponent(direction);
+      try {
+        const data = await api(url);
+        const rows = data.content || [];
+        if (!rows.length) {
+          body.innerHTML = '<tr><td colspan="5" class="muted">No movies yet. Add one after logging in.</td></tr>';
+        } else {
+          body.innerHTML = rows.map((m) => {
+            const year = m.releaseDate ? String(m.releaseDate).slice(0, 4) : "—";
+            const rating = m.averageRating != null ? m.averageRating : "—";
+            return (
+              "<tr>" +
+              "<td>" + m.id + "</td>" +
+              "<td>" + escapeHtml(m.title) + "</td>" +
+              "<td>" + year + "</td>" +
+              "<td>" + rating + " (" + (m.ratingCount || 0) + ")</td>" +
+              '<td><a href="/movie.html?id=' + m.id + '">Open</a></td>' +
+              "</tr>"
+            );
+          }).join("");
+        }
+        document.getElementById("page-info").textContent =
+          "Page " + (data.number ?? page) +
+          " of " + (data.totalPages ?? "?") +
+          " · " + (data.totalElements ?? 0) + " total";
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" class="muted">Failed to load.</td></tr>';
+        showMessage(msg, err.message, "error");
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("reload-btn").addEventListener("click", loadMovies);
+    loadMovies();
+  </script>
+</body>
+</html>

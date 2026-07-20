@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Register</h1>
+      <p>Create an account. Roles are seeded on the server at startup.</p>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="panel">
+      <form id="register-form">
+        <div class="row">
+          <div class="field">
+            <label for="username">Username</label>
+            <input id="username" required maxlength="30" />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" required />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="firstName">First name</label>
+            <input id="firstName" required />
+          </div>
+          <div class="field">
+            <label for="lastName">Last name</label>
+            <input id="lastName" required />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="password">Password (min 8)</label>
+            <input id="password" type="password" required minlength="8" />
+          </div>
+          <div class="field">
+            <label for="dateOfBirth">Date of birth</label>
+            <input id="dateOfBirth" type="date" required />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit">Create account</button>
+          <a class="btn btn-secondary" href="/login.html">Already have an account</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      clearMessage(msg);
+      const email = document.getElementById("email").value.trim();
+      const body = {
+        username: document.getElementById("username").value.trim(),
+        email,
+        password: document.getElementById("password").value,
+        firstName: document.getElementById("firstName").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        dateOfBirth: document.getElementById("dateOfBirth").value
+      };
+      try {
+        const data = await api("/api/auth/register", { method: "POST", body });
+        Auth.setSession(data.token, email);
+        showMessage(msg, "Account created. Redirecting…", "ok");
+        setTimeout(() => (window.location.href = "/movies.html"), 600);
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

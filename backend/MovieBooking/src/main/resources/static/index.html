@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Browse movies. Rate what you watch.</h1>
+      <p>
+        Simple UI over the Spring Boot API — register, sign in, browse the catalog,
+        and submit ratings. Write actions need a JWT from login or register.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>Navigate</h2>
+      <div class="grid-actions">
+        <a class="action-link" href="/movies.html">
+          <strong>Movies</strong>
+          <span>List and open titles (public)</span>
+        </a>
+        <a class="action-link" href="/register.html">
+          <strong>Register</strong>
+          <span>Create an account and get a token</span>
+        </a>
+        <a class="action-link" href="/login.html">
+          <strong>Login</strong>
+          <span>Sign in to unlock writes</span>
+        </a>
+        <a class="action-link" href="/movie-form.html">
+          <strong>Add movie</strong>
+          <span>Requires authentication</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>API status</h2>
+      <p class="muted" id="api-status">Checking…</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Backend demo UI · HTML / CSS / JS · served from Spring Boot static resources
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    (async function () {
+      const el = document.getElementById("api-status");
+      try {
+        const page = await api("/api/movies?page=0&size=1");
+        el.textContent =
+          "API reachable. Movies in catalog: " + (page.totalElements ?? "—");
+      } catch (e) {
+        el.textContent = "API not reachable yet — start the Spring Boot app.";
+      }
+    })();
+  </script>
+</body>
+</html>

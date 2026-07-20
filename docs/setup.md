@@ -30,6 +30,15 @@ cd movie_backend
 CREATE DATABASE movie_booking;
 ```
 
+For the recommended Docker DB (Compose):
+
+```bash
+cd backend/MovieBooking
+docker compose up -d postgres
+```
+
+Host JDBC URL defaults to port **5434**: `jdbc:postgresql://localhost:5434/movie_booking` (user `postgres`, password `000`).
+
 Roles (`USER`, `ADMIN`) are inserted automatically on startup by `RoleDataInitializer` if missing.
 
 ---
@@ -44,18 +53,20 @@ cp .env.example .env
 Example `.env`:
 
 ```env
-DB_URL=jdbc:postgresql://localhost:5432/movie_booking
+DB_URL=jdbc:postgresql://localhost:5434/movie_booking
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 JWT_SECRET=change-me-to-a-long-random-secret
 JWT_EXPIRATION=86400000
 ```
 
-Load before running:
+Load before running (optional if you rely on `application.properties` defaults):
 
 ```bash
 set -a && source .env && set +a
 ```
+
+Defaults in `application.properties` already point at Compose Postgres on port **5434**.
 
 ---
 

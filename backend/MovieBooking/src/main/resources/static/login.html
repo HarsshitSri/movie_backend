@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Login</h1>
+      <p>Sign in to create movies and submit ratings.</p>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="panel">
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required minlength="8" />
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit">Sign in</button>
+          <a class="btn btn-secondary" href="/register.html">Create account</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      clearMessage(msg);
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      try {
+        const data = await api("/api/auth/login", {
+          method: "POST",
+          body: { email, password }
+        });
+        Auth.setSession(data.token, email);
+        showMessage(msg, "Signed in. Redirecting…", "ok");
+        setTimeout(() => (window.location.href = "/movies.html"), 600);
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

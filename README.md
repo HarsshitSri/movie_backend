@@ -20,6 +20,7 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
 | JWT required on write endpoints | Done — `GET` movies public; create/update/delete/rate need Bearer token |
+| Basic HTML/CSS/JS UI for navigation | Done — served at `/` |
 | Role-based access (`USER` / `ADMIN` on endpoints) | Partial — roles stored; not used for authorization rules yet |
 | Theatres / booking / payments | Planned |
 
@@ -32,12 +33,21 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 ```bash
 git clone git@github.com:HarsshitSri/movie_backend.git
 cd movie_backend/backend/MovieBooking
+docker compose up -d postgres
+./mvnw spring-boot:run
+```
+
+Or run API + DB together:
+
+```bash
 docker compose up -d --build
 ```
 
-API: [http://localhost:8080](http://localhost:8080)
+API / UI: [http://localhost:8080](http://localhost:8080/)
 
-Roles (`USER`, `ADMIN`) are seeded automatically on startup. Register via `POST /api/auth/register`, then use the returned JWT for write endpoints.
+**Note:** Compose maps Postgres to host port **5434** (to avoid clashing with a local Postgres on 5432). App defaults use `jdbc:postgresql://localhost:5434/movie_booking` with user `postgres` / password `000`.
+
+Roles (`USER`, `ADMIN`) are seeded automatically on startup. Register via the UI or `POST /api/auth/register`, then use the JWT for write endpoints.
 
 HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 
@@ -63,7 +73,7 @@ HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 ```
 movie_backend/
 ├── backend/MovieBooking/     # Spring Boot app (run from here)
-│   ├── src/
+│   ├── src/main/resources/static/   # HTML / CSS / JS UI
 │   ├── Dockerfile
 │   ├── docker-compose.yml
 │   └── pom.xml
@@ -71,6 +81,16 @@ movie_backend/
 ├── assets/                   # Diagram / screenshot plan (images TBD)
 └── README.md
 ```
+
+### Frontend pages
+
+| Path | Purpose |
+|------|---------|
+| `/` or `/index.html` | Home + navigation |
+| `/movies.html` | Paginated movie list |
+| `/movie.html?id=` | Movie detail, rate, delete |
+| `/movie-form.html` | Create movie (JWT) |
+| `/login.html` / `/register.html` | Auth |
 
 Packages: `controller` → `service` → `repository` → `entity`, plus `dto`, `mapper`, `security`, `config`, `exception`.
 

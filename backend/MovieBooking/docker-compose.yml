@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   postgres:
@@ -13,10 +11,10 @@ services:
       POSTGRES_PASSWORD: "000"
 
     ports:
-      - "5432:5432"
+      - "5434:5432"
 
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data-v2:/var/lib/postgresql/data
 
 
   app:
@@ -39,4 +37,4 @@ services:
       JWT_EXPIRATION: 86400000
 
 volumes:
-  postgres-data:
+  postgres-data-v2:

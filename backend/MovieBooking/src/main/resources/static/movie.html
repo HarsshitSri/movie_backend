@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movie · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="msg" class="msg"></div>
+
+    <section class="panel" id="movie-panel">
+      <p class="muted">Loading…</p>
+    </section>
+
+    <section class="panel">
+      <h2>Rate this movie</h2>
+      <p class="muted">Requires login. Send your numeric user id (from registration order / DB).</p>
+      <form id="rate-form">
+        <div class="row">
+          <div class="field">
+            <label for="userId">User ID</label>
+            <input id="userId" type="number" min="1" required />
+          </div>
+          <div class="field">
+            <label for="rating">Rating (1–10)</label>
+            <input id="rating" type="number" min="1" max="10" required />
+          </div>
+        </div>
+        <button class="btn" type="submit">Submit rating</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    const movieId = qs("id");
+    const msg = document.getElementById("msg");
+    const panel = document.getElementById("movie-panel");
+
+    async function loadMovie() {
+      if (!movieId) {
+        panel.innerHTML = '<p class="muted">Missing movie id. Go back to <a href="/movies.html">Movies</a>.</p>';
+        return;
+      }
+      try {
+        const m = await api("/api/movies/" + movieId);
+        document.title = m.title + " · Movie Platform";
+        panel.innerHTML =
+          "<h1 style=\"margin:0 0 0.35rem;font-size:1.5rem\">" + escapeHtml(m.title) + "</h1>" +
+          '<div class="movie-meta">' +
+          "<span>" + (m.releaseDate || "—") + "</span>" +
+          "<span>" + (m.runtimeMinutes || "—") + " min</span>" +
+          "<span>" + escapeHtml(m.language || "") + "</span>" +
+          "<span>" + escapeHtml(m.contentRating || "") + "</span>" +
+          "<span>Avg " + (m.averageRating ?? 0) + " · " + (m.ratingCount ?? 0) + " ratings</span>" +
+          "</div>" +
+          '<p class="synopsis">' + escapeHtml(m.synopsis || "") + "</p>" +
+          '<div class="btn-row">' +
+          '<a class="btn btn-secondary" href="/movies.html">Back to list</a>' +
+          '<button type="button" class="btn btn-danger" id="delete-btn">Delete</button>' +
+          "</div>";
+
+        document.getElementById("delete-btn").addEventListener("click", async () => {
+          if (!confirm("Delete this movie?")) return;
+          clearMessage(msg);
+          try {
+            await api("/api/movies/" + movieId, { method: "DELETE", auth: true });
+            showMessage(msg, "Deleted. Redirecting…", "ok");
+            setTimeout(() => (window.location.href = "/movies.html"), 500);
+          } catch (err) {
+            showMessage(msg, err.message, "error");
+          }
+        });
+      } catch (err) {
+        panel.innerHTML = '<p class="muted">Could not load movie.</p>';
+        showMessage(msg, err.message, "error");
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("rate-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessage(msg);
+      if (!movieId) return;
+      const body = {
+        userId: Number(document.getElementById("userId").value),
+        rating: Number(document.getElementById("rating").value)
+      };
+      try {
+        await api("/api/movies/" + movieId + "/ratings", {
+          method: "POST",
+          auth: true,
+          body
+        });
+        showMessage(msg, "Rating saved.", "ok");
+        loadMovie();
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+
+    loadMovie();
+  </script>
+</body>
+</html>

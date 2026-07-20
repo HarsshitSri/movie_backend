@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add movie · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Add movie</h1>
+      <p>Requires a JWT. <a href="/login.html">Log in</a> if you have not already.</p>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="panel">
+      <form id="movie-form">
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" required maxlength="255" />
+        </div>
+        <div class="field">
+          <label for="synopsis">Synopsis</label>
+          <textarea id="synopsis" rows="4" required maxlength="5000"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="releaseDate">Release date</label>
+            <input id="releaseDate" type="date" required />
+          </div>
+          <div class="field">
+            <label for="runtimeMinutes">Runtime (minutes)</label>
+            <input id="runtimeMinutes" type="number" min="1" required />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="language">Language</label>
+            <input id="language" required maxlength="50" />
+          </div>
+          <div class="field">
+            <label for="countryOfOrigin">Country</label>
+            <input id="countryOfOrigin" required maxlength="100" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="contentRating">Content rating</label>
+            <select id="contentRating" required>
+              <option value="G">G</option>
+              <option value="PG">PG</option>
+              <option value="PG_13" selected>PG_13</option>
+              <option value="R">R</option>
+              <option value="NC_17">NC_17</option>
+              <option value="ADULT_18">ADULT_18</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="posterUrl">Poster URL (optional)</label>
+            <input id="posterUrl" type="url" maxlength="500" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit">Create</button>
+          <a class="btn btn-secondary" href="/movies.html">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    document.getElementById("movie-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      clearMessage(msg);
+
+      if (!Auth.isLoggedIn()) {
+        showMessage(msg, "Please log in first.", "error");
+        return;
+      }
+
+      const body = {
+        title: document.getElementById("title").value.trim(),
+        synopsis: document.getElementById("synopsis").value.trim(),
+        releaseDate: document.getElementById("releaseDate").value,
+        runtimeMinutes: Number(document.getElementById("runtimeMinutes").value),
+        language: document.getElementById("language").value.trim(),
+        countryOfOrigin: document.getElementById("countryOfOrigin").value.trim(),
+        contentRating: document.getElementById("contentRating").value,
+        posterUrl: document.getElementById("posterUrl").value.trim() || null
+      };
+
+      try {
+        const movie = await api("/api/movies", {
+          method: "POST",
+          auth: true,
+          body
+        });
+        showMessage(msg, "Created. Opening movie…", "ok");
+        setTimeout(() => (window.location.href = "/movie.html?id=" + movie.id), 500);
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

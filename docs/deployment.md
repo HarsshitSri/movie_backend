@@ -60,7 +60,7 @@ docker compose down
 | Service | URL |
 |---------|-----|
 | Application | `http://localhost:8080` |
-| PostgreSQL | `localhost:5432` |
+| PostgreSQL (host) | `localhost:5434` → container `5432` |
 
 Docker Compose service names:
 
