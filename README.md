@@ -1,6 +1,6 @@
 # Movie Platform Backend
 
-REST API for **user authentication**, a **movie catalog**, and **user ratings** — built with Java 21 and Spring Boot.
+REST API and simple web UI for **authentication**, a **movie catalog**, **ratings**, **written reviews**, and a **personal watchlist** — built with Java 21 and Spring Boot.
 
 Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** implemented yet.
 
@@ -23,12 +23,13 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
 | JWT + RBAC on write endpoints | Done — `GET` movies public; create/update/delete need **ADMIN**; ratings need any logged-in user |
-| Basic HTML/CSS/JS UI | Done — served at `/` |
+| Basic HTML/CSS/JS UI | Done — product-style pages at `/` (Previous/Next movie paging) |
 | Seeded demo admin | Done — see credentials below |
+| Seeded demo movie catalog | Done — **30** titles on startup (adds any missing titles only) |
 | Friendly API error messages (no raw SQL leaks) | Done |
 | Theatres / booking / payments | Planned |
 
-**Why it is not “just CRUD”:** JWT-protected writes, role-based movie admin, denormalized rating aggregates, and design docs under `docs/`.
+**Why it is not “just CRUD”:** JWT-protected writes, role-based movie admin, denormalized rating aggregates, watchlist/reviews, and design docs under `docs/`.
 
 ---
 
@@ -52,7 +53,7 @@ docker compose up -d --build
 - **Postgres (Compose):** host port **5434** → container `5432`  
   Defaults: `jdbc:postgresql://localhost:5434/movie_booking`, user `postgres`, password `000`
 
-Roles (`USER`, `ADMIN`) and the demo admin are seeded on first startup (admin is not re-created if it already exists). Register a normal user via the UI or `POST /api/auth/register`.
+Roles (`USER`, `ADMIN`), the demo admin, and a **30-movie demo catalog** are seeded on startup (missing demo titles only — existing movies/ratings are not wiped). Register a normal user via the UI or `POST /api/auth/register`.
 
 HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 
@@ -91,8 +92,8 @@ movie_backend/
 
 | Path | Purpose |
 |------|---------|
-| `/` or `/index.html` | Home + navigation |
-| `/movies.html` | Paginated movie list |
+| `/` or `/index.html` | Home, collection size, navigation |
+| `/movies.html` | Movie list with sort + Previous/Next paging |
 | `/movie.html?id=` | Detail, rate, review, watchlist toggle, delete (admin) |
 | `/watchlist.html` | Your saved movies (login required) |
 | `/movie-form.html` | Create movie (**ADMIN** only) |
@@ -169,6 +170,7 @@ Base URL: `http://localhost:8080`
 | `POST` | `/api/movies/{movieId}/reviews` | JWT |
 | `DELETE` | `/api/movies/{movieId}/reviews/me` | JWT |
 | `GET` | `/api/watchlist` | JWT |
+| `GET` | `/api/watchlist/{movieId}/status` | JWT |
 | `POST` | `/api/watchlist/{movieId}` | JWT |
 | `DELETE` | `/api/watchlist/{movieId}` | JWT |
 
@@ -286,7 +288,7 @@ Uses H2. Covers context load plus an API flow: USER cannot create movies, ADMIN 
 | Phase | Scope | Status |
 |-------|-------|--------|
 | v1 | Auth, movies, ratings, JWT + ADMIN writes, Docker, UI | Done |
-| v2 | Watchlist + written reviews | Done |
+| v2 | Watchlist + written reviews + demo catalog + UI polish | Done |
 | v3 | Theatres, showtimes, booking | Planned |
 | v4 | Payments, notifications | Planned |
 | v5 | CI/CD, OpenAPI, broader tests | Planned |

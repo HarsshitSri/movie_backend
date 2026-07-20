@@ -26,7 +26,7 @@
   <main>
     <section class="hero">
       <h1>Movies</h1>
-      <p>Paginated catalog from <code>GET /api/movies</code>.</p>
+      <p>Browse titles in the collection.</p>
     </section>
 
     <div id="msg" class="msg"></div>
@@ -34,30 +34,26 @@
     <section class="panel">
       <div class="toolbar">
         <div class="field">
-          <label for="page">Page</label>
-          <input id="page" type="number" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="size">Size</label>
+          <label for="size">Per page</label>
           <input id="size" type="number" min="1" max="50" value="10" />
         </div>
         <div class="field">
           <label for="sort">Sort</label>
           <select id="sort">
-            <option value="id">id</option>
-            <option value="title">title</option>
-            <option value="releaseDate">releaseDate</option>
-            <option value="averageRating">averageRating</option>
+            <option value="title">Title</option>
+            <option value="releaseDate">Release date</option>
+            <option value="averageRating">Rating</option>
+            <option value="id">Newest</option>
           </select>
         </div>
         <div class="field">
-          <label for="direction">Direction</label>
+          <label for="direction">Order</label>
           <select id="direction">
-            <option value="asc">asc</option>
-            <option value="desc">desc</option>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
           </select>
         </div>
-        <button class="btn" type="button" id="reload-btn">Load</button>
+        <button class="btn" type="button" id="reload-btn">Apply</button>
         <a class="btn btn-secondary" href="/movie-form.html" data-admin-only>Add movie</a>
       </div>
 
@@ -65,7 +61,6 @@
         <table>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Title</th>
               <th>Year</th>
               <th>Rating</th>
@@ -73,27 +68,38 @@
             </tr>
           </thead>
           <tbody id="movies-body">
-            <tr><td colspan="5" class="muted">Loading…</td></tr>
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="muted" id="page-info"></p>
+
+      <div class="pager">
+        <p class="muted pager-info" id="page-info"></p>
+        <div class="pager-actions">
+          <button type="button" class="btn btn-secondary" id="prev-btn" disabled>Previous</button>
+          <button type="button" class="btn btn-secondary" id="next-btn" disabled>Next</button>
+        </div>
+      </div>
     </section>
   </main>
 
   <script src="/js/api.js"></script>
   <script src="/js/nav.js"></script>
   <script>
+    let currentPage = 0;
+    let totalPages = 1;
+
     async function loadMovies() {
       const msg = document.getElementById("msg");
       const body = document.getElementById("movies-body");
+      const prevBtn = document.getElementById("prev-btn");
+      const nextBtn = document.getElementById("next-btn");
       clearMessage(msg);
-      const page = document.getElementById("page").value || 0;
       const size = document.getElementById("size").value || 10;
       const sort = document.getElementById("sort").value;
       const direction = document.getElementById("direction").value;
       const url =
-        "/api/movies?page=" + page +
+        "/api/movies?page=" + currentPage +
         "&size=" + size +
         "&sort=" + encodeURIComponent(sort) +
         "&direction=" + encodeURIComponent(direction);
@@ -101,28 +107,36 @@
         const data = await api(url);
         const rows = data.content || [];
         if (!rows.length) {
-          body.innerHTML = '<tr><td colspan="5" class="muted">No movies yet. Add one after logging in.</td></tr>';
+          body.innerHTML = '<tr><td colspan="4" class="muted">No movies in the collection yet.</td></tr>';
         } else {
           body.innerHTML = rows.map((m) => {
             const year = m.releaseDate ? String(m.releaseDate).slice(0, 4) : "—";
             const rating = m.averageRating != null ? m.averageRating : "—";
             return (
               "<tr>" +
-              "<td>" + m.id + "</td>" +
               "<td>" + escapeHtml(m.title) + "</td>" +
               "<td>" + year + "</td>" +
               "<td>" + rating + " (" + (m.ratingCount || 0) + ")</td>" +
-              '<td><a href="/movie.html?id=' + m.id + '">Open</a></td>' +
+              '<td><a href="/movie.html?id=' + m.id + '">View</a></td>' +
               "</tr>"
             );
           }).join("");
         }
+
+        currentPage = data.number ?? currentPage;
+        totalPages = Math.max(data.totalPages ?? 1, 1);
+        const displayPage = currentPage + 1;
         document.getElementById("page-info").textContent =
-          "Page " + (data.number ?? page) +
-          " of " + (data.totalPages ?? "?") +
-          " · " + (data.totalElements ?? 0) + " total";
+          "Page " + displayPage + " of " + totalPages +
+          " · " + (data.totalElements ?? 0) + " movies";
+
+        prevBtn.disabled = currentPage <= 0;
+        nextBtn.disabled = currentPage >= totalPages - 1;
       } catch (err) {
-        body.innerHTML = '<tr><td colspan="5" class="muted">Failed to load.</td></tr>';
+        body.innerHTML = '<tr><td colspan="4" class="muted">Could not load movies.</td></tr>';
+        document.getElementById("page-info").textContent = "";
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
         showMessage(msg, err.message, "error");
       }
     }
@@ -135,7 +149,23 @@
         .replace(/"/g, "&quot;");
     }
 
-    document.getElementById("reload-btn").addEventListener("click", loadMovies);
+    document.getElementById("reload-btn").addEventListener("click", () => {
+      currentPage = 0;
+      loadMovies();
+    });
+
+    document.getElementById("prev-btn").addEventListener("click", () => {
+      if (currentPage <= 0) return;
+      currentPage -= 1;
+      loadMovies();
+    });
+
+    document.getElementById("next-btn").addEventListener("click", () => {
+      if (currentPage >= totalPages - 1) return;
+      currentPage += 1;
+      loadMovies();
+    });
+
     loadMovies();
   </script>
 </body>

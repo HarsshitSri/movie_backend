@@ -537,6 +537,35 @@ th {
   min-width: 120px;
 }
 
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(244, 241, 234, 0.1);
+  flex-wrap: wrap;
+}
+
+.pager-info {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.pager-actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.pager-actions .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .movie-meta {
   display: flex;
   flex-wrap: wrap;

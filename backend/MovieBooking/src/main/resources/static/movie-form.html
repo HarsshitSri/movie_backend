@@ -26,7 +26,7 @@
   <main>
     <section class="hero">
       <h1>Add movie</h1>
-      <p>Admin only. Seeded admin: <code>admin@movieplatform.local</code> / <code>Admin@12345</code></p>
+      <p>Add a new title to the collection.</p>
     </section>
 
     <div id="msg" class="msg"></div>
@@ -97,7 +97,7 @@
         return;
       }
       if (!Auth.isAdmin()) {
-        showMessage(msg, "Only ADMIN users can create movies.", "error");
+        showMessage(msg, "Only admins can add movies.", "error");
         document.getElementById("form-panel").style.display = "none";
         return;
       }
@@ -109,7 +109,7 @@
       clearMessage(msg);
 
       if (!Auth.isAdmin()) {
-        showMessage(msg, "Only ADMIN users can create movies.", "error");
+        showMessage(msg, "Only admins can add movies.", "error");
         return;
       }
 

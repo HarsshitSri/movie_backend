@@ -95,10 +95,10 @@ async function api(path, options = {}) {
 
 function formatError(data, status) {
   if (status === 403) {
-    return (data && (data.message || data.error)) || "Forbidden — admin role required.";
+    return (data && (data.message || data.error)) || "You don’t have permission for this action.";
   }
   if (status === 401) {
-    return (data && (data.message || data.error)) || "Unauthorized — please log in.";
+    return (data && (data.message || data.error)) || "Please log in to continue.";
   }
   if (!data) {
     return "Request failed (" + status + ")";
