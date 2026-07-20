@@ -37,17 +37,7 @@ docker compose up -d --build
 API: `http://localhost:8080`  
 Postgres: `localhost:5432`
 
-### After first start — seed roles
-
-Tables are created by Hibernate. Before registering a user:
-
-```sql
-INSERT INTO roles (name, description) VALUES
-  ('USER', 'Default user'),
-  ('ADMIN', 'Administrator');
-```
-
-Connect with any Postgres client to `movie_booking` (Compose default user/password are in `docker-compose.yml`).
+Roles are seeded automatically on startup. No manual `INSERT` into `roles` is required for a normal first run.
 
 ### Smoke check
 
@@ -55,7 +45,7 @@ Connect with any Postgres client to `movie_booking` (Compose default user/passwo
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/movies
 ```
 
-Expect `200` when the API is up. Then register (see [setup.md](setup.md)).
+Expect `200` when the API is up. Then register and call protected endpoints with a Bearer token (see [setup.md](setup.md) / [quickstart.http](quickstart.http)).
 
 Stop services:
 

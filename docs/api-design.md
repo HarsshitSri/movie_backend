@@ -12,11 +12,18 @@ REST API reference synchronized with the current controller implementation.
 
 ## Authentication
 
-`SecurityConfig` currently sets `permitAll()` for all routes. The JWT filter is not registered on the security filter chain.
+JWT filter is registered on the security filter chain (stateless sessions).
 
-**Authentication required for all endpoints today:** No
+| Rule | Endpoints |
+|------|-----------|
+| Public | `POST /api/auth/**`, `GET /api/movies`, `GET /api/movies/{id}` |
+| Authenticated (`Authorization: Bearer <token>`) | Create / update / delete movie, rate movie |
 
-JWT tokens are returned by register and login but are not required to call other endpoints.
+Missing or invalid token on protected routes → **`401 Unauthorized`**.
+
+Roles (`USER`, `ADMIN`) are seeded on startup. Endpoint authorization does **not** yet distinguish roles (any authenticated user can write).
+
+Ready-made requests: [quickstart.http](quickstart.http)
 
 ---
 
@@ -302,7 +309,7 @@ None
 | **URL** | `/api/movies` |
 | **Method** | `POST` |
 | **Purpose** | Create a new movie |
-| **Authentication required** | No |
+| **Authentication required** | Yes — `Authorization: Bearer <token>` |
 
 #### Request Body (`MovieRequestDto`)
 
@@ -340,11 +347,13 @@ Returns the created movie. `id`, `averageRating` (`0`), and `ratingCount` (`0`) 
 |------|------|
 | `201 Created` | Movie created successfully |
 | `400 Bad Request` | Validation failed |
+| `401 Unauthorized` | Missing or invalid JWT |
 
 #### Possible Errors
 
 | Condition | Status | Response |
 |-----------|--------|----------|
+| Missing / invalid token | `401` | Empty body (Spring Security) |
 | Invalid or missing fields | `400` | `ApiErrorResponse` with field errors |
 | Invalid `contentRating` value | `400` | `ApiErrorResponse` or Spring deserialization error |
 
@@ -357,7 +366,7 @@ Returns the created movie. `id`, `averageRating` (`0`), and `ratingCount` (`0`) 
 | **URL** | `/api/movies/{id}` |
 | **Method** | `PUT` |
 | **Purpose** | Update an existing movie |
-| **Authentication required** | No |
+| **Authentication required** | Yes — `Authorization: Bearer <token>` |
 
 #### Path Parameters
 
@@ -380,12 +389,14 @@ Returns the updated movie. `averageRating` and `ratingCount` are not modified by
 | Code | When |
 |------|------|
 | `200 OK` | Movie updated successfully |
+| `401 Unauthorized` | Missing or invalid JWT |
 | `404 Not Found` | Movie does not exist |
 
 #### Possible Errors
 
 | Condition | Status | Response |
 |-----------|--------|----------|
+| Missing / invalid token | `401` | Empty body (Spring Security) |
 | Movie not found | `404` | `ApiErrorResponse` — `"Movie Not Found"` |
 | Invalid JSON or `contentRating` | `400` | Spring deserialization error |
 
@@ -398,7 +409,7 @@ Returns the updated movie. `averageRating` and `ratingCount` are not modified by
 | **URL** | `/api/movies/{id}` |
 | **Method** | `DELETE` |
 | **Purpose** | Delete a movie by ID |
-| **Authentication required** | No |
+| **Authentication required** | Yes — `Authorization: Bearer <token>` |
 
 #### Path Parameters
 
@@ -419,12 +430,14 @@ None (empty body)
 | Code | When |
 |------|------|
 | `204 No Content` | Movie deleted successfully |
+| `401 Unauthorized` | Missing or invalid JWT |
 | `404 Not Found` | Movie does not exist |
 
 #### Possible Errors
 
 | Condition | Status | Response |
 |-----------|--------|----------|
+| Missing / invalid token | `401` | Empty body (Spring Security) |
 | Movie not found | `404` | `ApiErrorResponse` — `"Movie Not Found"` |
 
 ---
@@ -436,7 +449,7 @@ None (empty body)
 | **URL** | `/api/movies/{movieId}/ratings` |
 | **Method** | `POST` |
 | **Purpose** | Create or update a user's rating for a movie and recalculate movie aggregates |
-| **Authentication required** | No |
+| **Authentication required** | Yes — `Authorization: Bearer <token>` |
 
 #### Path Parameters
 
@@ -488,6 +501,7 @@ None (empty body)
 |------|------|
 | `201 Created` | Rating created or updated |
 | `400 Bad Request` | Validation failed |
+| `401 Unauthorized` | Missing or invalid JWT |
 | `404 Not Found` | Movie does not exist |
 | `500 Internal Server Error` | User not found |
 
@@ -495,6 +509,7 @@ None (empty body)
 
 | Condition | Status | Response |
 |-----------|--------|----------|
+| Missing / invalid token | `401` | Empty body (Spring Security) |
 | Invalid or missing fields | `400` | `ApiErrorResponse` with field errors |
 | Movie not found | `404` | `ApiErrorResponse` — `"Movie Not Found"` |
 | User not found | `500` | Spring default error (`"User not found"`) |
@@ -509,10 +524,10 @@ None (empty body)
 | `POST` | `/api/auth/login` | No |
 | `GET` | `/api/movies` | No |
 | `GET` | `/api/movies/{id}` | No |
-| `POST` | `/api/movies` | No |
-| `PUT` | `/api/movies/{id}` | No |
-| `DELETE` | `/api/movies/{id}` | No |
-| `POST` | `/api/movies/{movieId}/ratings` | No |
+| `POST` | `/api/movies` | Bearer JWT |
+| `PUT` | `/api/movies/{id}` | Bearer JWT |
+| `DELETE` | `/api/movies/{id}` | Bearer JWT |
+| `POST` | `/api/movies/{movieId}/ratings` | Bearer JWT |
 
 ---
 

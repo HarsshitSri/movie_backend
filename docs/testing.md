@@ -12,55 +12,41 @@ From `backend/MovieBooking/`:
 ./mvnw test
 ```
 
-Tests use H2 via `src/test/resources/application.properties`.
+| Test | What it covers |
+|------|----------------|
+| `MovieBookingApplicationTests` | Context loads (H2) |
+| `AuthAndMovieApiTest` | Register → login → create movie (JWT) → public GET list |
 
-There is no broad unit or integration suite yet (context load test only).
+Tests use H2 via `src/test/resources/application.properties`. Roles are seeded by `RoleDataInitializer`.
 
 ---
 
 ## Manual API testing
 
-**Tool:** curl, Postman, or any HTTP client  
-**Base URL:** `http://localhost:8080`
-
-**Prerequisites**
-
-1. App running ([setup.md](setup.md) or Docker)
-2. Roles seeded (`USER`, `ADMIN`) — see [setup.md](setup.md)
+**Base URL:** `http://localhost:8080`  
+**Ready-made requests:** [quickstart.http](quickstart.http)
 
 ### Ordered smoke flow
 
-| Step | Request | Expect |
-|------|---------|--------|
-| 1 | `POST /api/auth/register` | `201` + `{ "token": "..." }` |
-| 2 | `POST /api/auth/login` | `200` + JWT |
-| 3 | `POST /api/movies` | `201` + movie with `id` |
-| 4 | `GET /api/movies?page=0&size=10` | `200` + `Page` JSON |
-| 5 | `POST /api/movies/{id}/ratings` with `userId` + `rating` | `201` |
-| 6 | `GET /api/movies/{id}` | Updated `averageRating` / `ratingCount` |
+| Step | Request | Auth | Expect |
+|------|---------|------|--------|
+| 1 | `POST /api/auth/register` | No | `201` + token |
+| 2 | `POST /api/auth/login` | No | `200` + token |
+| 3 | `POST /api/movies` without token | — | `401` |
+| 4 | `POST /api/movies` with Bearer token | Yes | `201` |
+| 5 | `GET /api/movies` | No | `200` |
+| 6 | `POST /api/movies/{id}/ratings` with token | Yes | `201` |
+| 7 | `GET /api/movies/{id}` | No | Updated averages |
 
-Example register:
-
-```bash
-curl -s -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "harshit",
-    "email": "harshit@example.com",
-    "password": "Password@123",
-    "firstName": "Harshit",
-    "lastName": "Srivastava",
-    "dateOfBirth": "2003-07-25"
-  }'
-```
-
-Full payloads and status codes: [api-design.md](api-design.md)
+Full payloads: [api-design.md](api-design.md)
 
 ---
 
 ## Security note
 
-JWT components exist, but endpoint authorization is **not enforced** (`permitAll()`). Token-required / 401 scenarios are planned for when the filter is wired into the security chain.
+- Public: auth endpoints + `GET` movies
+- Authenticated: movie writes + ratings
+- Role-based rules (`ADMIN`-only deletes, etc.) are **not** implemented yet
 
 ---
 

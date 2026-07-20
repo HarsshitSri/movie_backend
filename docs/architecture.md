@@ -284,7 +284,7 @@ Login does **not** use `AuthenticationManager.authenticate()`. It validates cred
 3. Load user via `CustomUserDetailsService` → `UserRepo.findByEmail`
 4. Validate token and set `SecurityContextHolder` authentication
 
-However, `SecurityConfig` does **not** add this filter to `SecurityFilterChain`, and all endpoints are `permitAll()`. **Incoming requests do not require a JWT today.**
+However, `SecurityConfig` **does** add this filter to `SecurityFilterChain` (stateless JWT). Public routes: `/api/auth/**` and `GET /api/movies` / `GET /api/movies/{id}`. Write endpoints require a valid Bearer token (`401` if missing).
 
 ### Security configuration beans
 
@@ -292,7 +292,7 @@ However, `SecurityConfig` does **not** add this filter to `SecurityFilterChain`,
 |-------|------|
 | `PasswordConfig` | Provides `BCryptPasswordEncoder` |
 | `ApplicationConfig` | Provides `DaoAuthenticationProvider`, `AuthenticationManager` |
-| `SecurityConfig` | Defines `SecurityFilterChain` with `permitAll()` |
+| `SecurityConfig` | Defines `SecurityFilterChain` with JWT filter; public auth + GET movies; writes authenticated |
 | `CustomUserDetailsService` | Loads `User` for Spring Security |
 | `CustomUserDetails` | Adapts `User` to `UserDetails` |
 

@@ -18,11 +18,12 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | Rate a movie (1–10); updates average & count | Done |
 | Layered architecture, DTOs, validation | Done |
 | PostgreSQL + Docker Compose | Done |
-| JWT required on endpoints | Partial — filter exists; routes are `permitAll()` today |
-| Role-based access (`USER` / `ADMIN`) | Partial — roles stored; not enforced on endpoints |
+| Roles seeded on startup (`USER`, `ADMIN`) | Done |
+| JWT required on write endpoints | Done — `GET` movies public; create/update/delete/rate need Bearer token |
+| Role-based access (`USER` / `ADMIN` on endpoints) | Partial — roles stored; not used for authorization rules yet |
 | Theatres / booking / payments | Planned |
 
-**Why it is not “just CRUD”:** auth token flow, denormalized rating aggregates, Spring Security wiring (documented as partial), and design docs under `docs/`.
+**Why it is not “just CRUD”:** JWT-protected writes, denormalized rating aggregates, role seeding, and design docs under `docs/`.
 
 ---
 
@@ -36,17 +37,9 @@ docker compose up -d --build
 
 API: [http://localhost:8080](http://localhost:8080)
 
-### Seed roles (required before first register)
+Roles (`USER`, `ADMIN`) are seeded automatically on startup. Register via `POST /api/auth/register`, then use the returned JWT for write endpoints.
 
-Registration looks up the `USER` role. On a fresh database, insert roles once:
-
-```sql
-INSERT INTO roles (name, description) VALUES
-  ('USER', 'Default user'),
-  ('ADMIN', 'Administrator');
-```
-
-Then call `POST /api/auth/register` (see [API](#api-overview)).
+HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 
 ---
 
@@ -89,7 +82,7 @@ Packages: `controller` → `service` → `repository` → `entity`, plus `dto`, 
 Client → Controller → Service → Repository → PostgreSQL
 ```
 
-Also in play: request DTOs + `@Valid`, mappers, Spring Security (`permitAll()` today), and `GlobalExceptionHandler` for validation / movie-not-found.
+Also in play: request DTOs + `@Valid`, mappers, JWT filter on the security chain, and `GlobalExceptionHandler` for validation / movie-not-found.
 
 Full request and security flow: [docs/architecture.md](docs/architecture.md)
 
@@ -108,31 +101,38 @@ Details: [docs/database-design.md](docs/database-design.md)
 
 ---
 
-## Authentication (honest status)
+## Authentication
 
-**Implemented:** register, login, BCrypt hashing, JWT generation (`JwtService`, `JwtAuthenticationFilter`, `CustomUserDetailsService`).
+**Implemented:** register, login, BCrypt hashing, JWT generation, JWT filter on the security chain, roles seeded on startup.
 
-**Not enforced yet:** `SecurityConfig` uses `permitAll()` and does not register the JWT filter on the chain. Movie and rating endpoints do **not** require a token today.
+**Access rules today**
+
+| Endpoints | Auth |
+|-----------|------|
+| `POST /api/auth/**` | Public |
+| `GET /api/movies`, `GET /api/movies/{id}` | Public |
+| Create / update / delete movie, rate movie | Requires `Authorization: Bearer <token>` |
+
+Role names exist in the DB; endpoint rules do **not** yet distinguish `USER` vs `ADMIN` (any authenticated user can write).
 
 ---
 
 ## API overview
 
-Base URL: `http://localhost:8080`  
-Auth required today: **No** (`permitAll()`)
+Base URL: `http://localhost:8080`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/register` | Register; returns JWT |
-| `POST` | `/api/auth/login` | Login; returns JWT |
-| `GET` | `/api/movies` | List (`page`, `size`, `sort`, `direction`) |
-| `GET` | `/api/movies/{id}` | Get by ID |
-| `POST` | `/api/movies` | Create |
-| `PUT` | `/api/movies/{id}` | Update |
-| `DELETE` | `/api/movies/{id}` | Delete |
-| `POST` | `/api/movies/{movieId}/ratings` | Create or update rating |
+| Method | Endpoint | Auth |
+|--------|----------|------|
+| `POST` | `/api/auth/register` | No |
+| `POST` | `/api/auth/login` | No |
+| `GET` | `/api/movies` | No |
+| `GET` | `/api/movies/{id}` | No |
+| `POST` | `/api/movies` | Bearer JWT |
+| `PUT` | `/api/movies/{id}` | Bearer JWT |
+| `DELETE` | `/api/movies/{id}` | Bearer JWT |
+| `POST` | `/api/movies/{movieId}/ratings` | Bearer JWT |
 
-Full reference: [docs/api-design.md](docs/api-design.md)
+Full reference: [docs/api-design.md](docs/api-design.md) · Quick requests: [docs/quickstart.http](docs/quickstart.http)
 
 ### Example: register
 
@@ -154,6 +154,7 @@ curl -s -X POST http://localhost:8080/api/auth/register \
 ```bash
 curl -s -X POST http://localhost:8080/api/movies \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_HERE" \
   -d '{
     "title": "Interstellar",
     "synopsis": "A team travels through a wormhole in space.",
@@ -171,6 +172,7 @@ curl -s -X POST http://localhost:8080/api/movies \
 ```bash
 curl -s -X POST http://localhost:8080/api/movies/1/ratings \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_HERE" \
   -d '{"userId": 1, "rating": 9}'
 ```
 
@@ -205,7 +207,7 @@ set -a && source .env && set +a   # bash
 | `JWT_SECRET` | Signing secret (recommended) |
 | `JWT_EXPIRATION` | Lifetime in ms (optional) |
 
-Then seed roles (SQL above) and hit the API.
+Then hit the API. Roles are seeded automatically on startup.
 
 More detail: [docs/setup.md](docs/setup.md)
 
@@ -218,7 +220,7 @@ cd backend/MovieBooking
 ./mvnw test
 ```
 
-Uses H2 (`src/test/resources/application.properties`). Suite is minimal (context load). Manual scenarios: [docs/testing.md](docs/testing.md)
+Uses H2. Includes a context-load test and an API flow test (register → login → create movie with JWT). Manual scenarios: [docs/testing.md](docs/testing.md)
 
 ---
 
@@ -227,6 +229,7 @@ Uses H2 (`src/test/resources/application.properties`). Suite is minimal (context
 | Document | Description |
 |----------|-------------|
 | [docs/setup.md](docs/setup.md) | Local setup |
+| [docs/quickstart.http](docs/quickstart.http) | Copy-paste HTTP requests |
 | [docs/architecture.md](docs/architecture.md) | Layers, request & security flow |
 | [docs/api-design.md](docs/api-design.md) | Endpoint reference |
 | [docs/database-design.md](docs/database-design.md) | Schema |
@@ -242,8 +245,8 @@ Uses H2 (`src/test/resources/application.properties`). Suite is minimal (context
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| v1 | Auth, movies, ratings, PostgreSQL, Docker | In progress |
-| v2 | Enforce JWT + role-based access | Planned |
+| v1 | Auth, movies, ratings, PostgreSQL, Docker, JWT on writes | In progress |
+| v2 | Role-based access (`ADMIN` vs `USER`) | Planned |
 | v3 | Theatres, showtimes, booking | Planned |
 | v4 | Payments, notifications | Planned |
 | v5 | OpenAPI, CI/CD, broader tests | Planned |

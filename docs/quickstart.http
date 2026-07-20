@@ -1,0 +1,58 @@
+### Movie Platform Backend — quickstart
+### Base URL
+@baseUrl = http://localhost:8080
+@token = paste-jwt-here
+
+### 1. Register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "harshit",
+  "email": "harshit@example.com",
+  "password": "Password@123",
+  "firstName": "Harshit",
+  "lastName": "Srivastava",
+  "dateOfBirth": "2003-07-25"
+}
+
+### 2. Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "harshit@example.com",
+  "password": "Password@123"
+}
+
+### 3. List movies (public)
+GET {{baseUrl}}/api/movies?page=0&size=10&sort=title&direction=asc
+
+### 4. Create movie (requires JWT)
+POST {{baseUrl}}/api/movies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Interstellar",
+  "synopsis": "A team travels through a wormhole in space.",
+  "releaseDate": "2014-11-07",
+  "runtimeMinutes": 169,
+  "language": "English",
+  "countryOfOrigin": "USA",
+  "contentRating": "PG_13",
+  "posterUrl": "https://example.com/poster.jpg"
+}
+
+### 5. Get movie by ID (public)
+GET {{baseUrl}}/api/movies/1
+
+### 6. Rate movie (requires JWT)
+POST {{baseUrl}}/api/movies/1/ratings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "rating": 9
+}

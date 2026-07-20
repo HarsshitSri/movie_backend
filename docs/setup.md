@@ -11,7 +11,7 @@ Local setup for the Spring Boot app in `backend/MovieBooking/`.
 | PostgreSQL | 16+ |
 | Git | Any recent version |
 
-Optional: Docker, Docker Compose, Postman, IntelliJ IDEA
+Optional: Docker, Docker Compose, Postman / IntelliJ HTTP Client
 
 ---
 
@@ -30,17 +30,7 @@ cd movie_backend
 CREATE DATABASE movie_booking;
 ```
 
-### Seed roles (required before first register)
-
-Registration assigns the `USER` role. Insert roles once on a fresh database:
-
-```sql
-INSERT INTO roles (name, description) VALUES
-  ('USER', 'Default user'),
-  ('ADMIN', 'Administrator');
-```
-
-Run this after the app has created tables (`ddl-auto=update` on first start), or create the `roles` table manually to match [database-design.md](database-design.md).
+Roles (`USER`, `ADMIN`) are inserted automatically on startup by `RoleDataInitializer` if missing.
 
 ---
 
@@ -66,16 +56,6 @@ Load before running:
 ```bash
 set -a && source .env && set +a
 ```
-
-`application.properties` maps:
-
-```properties
-spring.datasource.url=${DB_URL}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-```
-
-JWT defaults also exist in `application.properties`; prefer env overrides for secrets.
 
 ---
 
@@ -104,13 +84,20 @@ curl -s -X POST http://localhost:8080/api/auth/register \
   }'
 ```
 
-Expect a JSON body with a `token` field (`201`). If you see `Default role not found`, seed roles (SQL above).
+Expect `201` and a `token`. Use that token for movie create/update/delete and ratings:
+
+```bash
+curl -s -X POST http://localhost:8080/api/movies \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_HERE" \
+  -d '{ ... }'
+```
+
+More requests: [quickstart.http](quickstart.http)
 
 ---
 
 ## Docker
-
-PostgreSQL + API together:
 
 ```bash
 cd backend/MovieBooking
@@ -126,7 +113,7 @@ Details: [deployment.md](deployment.md)
 | Problem | Likely cause |
 |---------|--------------|
 | App fails to start / DB connection error | `DB_URL` / credentials not set or Postgres not running |
-| `Default role not found` on register | `roles` table empty — run seed SQL |
+| `401` on create movie / rate | Missing or invalid `Authorization: Bearer <token>` |
 | Port `8080` or `5432` in use | Stop the other process or change ports |
 | Invalid email or password → `500` | Auth errors are not mapped to `401` yet |
 
@@ -135,6 +122,7 @@ Details: [deployment.md](deployment.md)
 ## Related documentation
 
 - [README.md](../README.md) — overview and quick start
+- [quickstart.http](quickstart.http) — HTTP client requests
 - [api-design.md](api-design.md) — endpoints
-- [testing.md](testing.md) — manual testing
+- [testing.md](testing.md) — testing
 - [deployment.md](deployment.md) — Docker
