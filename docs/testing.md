@@ -4,9 +4,7 @@ Testing guide for the current implementation.
 
 ---
 
-## Automated Tests
-
-The project includes a Spring Boot context load test.
+## Automated tests
 
 From `backend/MovieBooking/`:
 
@@ -14,72 +12,60 @@ From `backend/MovieBooking/`:
 ./mvnw test
 ```
 
-Tests run against an in-memory H2 database configured in:
+Tests use H2 via `src/test/resources/application.properties`.
 
+There is no broad unit or integration suite yet (context load test only).
+
+---
+
+## Manual API testing
+
+**Tool:** curl, Postman, or any HTTP client  
+**Base URL:** `http://localhost:8080`
+
+**Prerequisites**
+
+1. App running ([setup.md](setup.md) or Docker)
+2. Roles seeded (`USER`, `ADMIN`) — see [setup.md](setup.md)
+
+### Ordered smoke flow
+
+| Step | Request | Expect |
+|------|---------|--------|
+| 1 | `POST /api/auth/register` | `201` + `{ "token": "..." }` |
+| 2 | `POST /api/auth/login` | `200` + JWT |
+| 3 | `POST /api/movies` | `201` + movie with `id` |
+| 4 | `GET /api/movies?page=0&size=10` | `200` + `Page` JSON |
+| 5 | `POST /api/movies/{id}/ratings` with `userId` + `rating` | `201` |
+| 6 | `GET /api/movies/{id}` | Updated `averageRating` / `ratingCount` |
+
+Example register:
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "harshit",
+    "email": "harshit@example.com",
+    "password": "Password@123",
+    "firstName": "Harshit",
+    "lastName": "Srivastava",
+    "dateOfBirth": "2003-07-25"
+  }'
 ```
-backend/MovieBooking/src/test/resources/application.properties
-```
 
-There is no broad unit or integration test suite yet.
+Full payloads and status codes: [api-design.md](api-design.md)
 
 ---
 
-## Manual API Testing
+## Security note
 
-Recommended tool: Postman
-
-Base URL: `http://localhost:8080`
+JWT components exist, but endpoint authorization is **not enforced** (`permitAll()`). Token-required / 401 scenarios are planned for when the filter is wired into the security chain.
 
 ---
 
-## Authentication
-
-| Scenario | Endpoint |
-|----------|----------|
-| Register | `POST /api/auth/register` |
-| Login | `POST /api/auth/login` |
-
-Verify that login returns a JWT in the response body.
-
----
-
-## Movies
-
-Verify the following against the movie endpoints:
-
-- Create (`POST /api/movies`)
-- Read by ID (`GET /api/movies/{id}`)
-- Update (`PUT /api/movies/{id}`)
-- Delete (`DELETE /api/movies/{id}`)
-- Pagination (`GET /api/movies?page=0&size=10`)
-- Sorting (`GET /api/movies?sort=title&direction=asc`)
-
----
-
-## Ratings
-
-| Scenario | Endpoint |
-|----------|----------|
-| Create or update rating | `POST /api/movies/{movieId}/ratings` |
-
-Verify that submitting a rating updates the movie's `average_rating` and `rating_count`.
-
----
-
-## Security
-
-JWT components exist (`JwtService`, `JwtAuthenticationFilter`), but endpoint authorization is **not enforced** yet (`permitAll()` in `SecurityConfig`).
-
-The following scenarios are **planned** for when authorization is enabled:
-
-- Invalid JWT
-- Missing JWT on protected endpoints
-- Expired JWT
-- Unauthorized access to protected endpoints
-
----
-
-## Related Documentation
+## Related documentation
 
 - [api-design.md](api-design.md) — endpoint reference
-- [setup.md](setup.md) — run the application locally
+- [setup.md](setup.md) — run locally
+- [README.md](../README.md) — quick start
