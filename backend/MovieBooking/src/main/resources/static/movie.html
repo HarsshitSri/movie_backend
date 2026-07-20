@@ -13,6 +13,7 @@
       <nav class="nav">
         <a href="/index.html" data-nav="index.html">Home</a>
         <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/watchlist.html" data-nav="watchlist.html" data-auth-only>Watchlist</a>
         <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
         <a href="/login.html" data-nav="login.html">Login</a>
         <a href="/register.html" data-nav="register.html">Register</a>
@@ -40,6 +41,26 @@
         <button class="btn" type="submit">Submit rating</button>
       </form>
     </section>
+
+    <section class="panel">
+      <h2>Write a review</h2>
+      <p class="muted">Optional text review (max 2000 characters). Separate from your numeric rating.</p>
+      <form id="review-form">
+        <div class="field">
+          <label for="review-body">Your review</label>
+          <textarea id="review-body" rows="4" maxlength="2000" required></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit">Save review</button>
+          <button class="btn btn-secondary" type="button" id="delete-review-btn">Delete my review</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Reviews</h2>
+      <div id="reviews-list"><p class="muted">Loading…</p></div>
+    </section>
   </main>
 
   <script src="/js/api.js"></script>
@@ -48,6 +69,69 @@
     const movieId = qs("id");
     const msg = document.getElementById("msg");
     const panel = document.getElementById("movie-panel");
+    let onWatchlist = false;
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function refreshWatchlistButton() {
+      const btn = document.getElementById("watchlist-btn");
+      if (!btn) return;
+      if (!Auth.isLoggedIn()) {
+        btn.style.display = "none";
+        return;
+      }
+      btn.style.display = "";
+      try {
+        const status = await api("/api/watchlist/" + movieId + "/status", { auth: true });
+        onWatchlist = Boolean(status.onWatchlist);
+        btn.textContent = onWatchlist ? "Remove from watchlist" : "Add to watchlist";
+      } catch (_) {
+        onWatchlist = false;
+        btn.textContent = "Add to watchlist";
+      }
+    }
+
+    async function loadReviews() {
+      const list = document.getElementById("reviews-list");
+      if (!movieId) {
+        list.innerHTML = '<p class="muted">No movie selected.</p>';
+        return;
+      }
+      try {
+        const reviews = await api("/api/movies/" + movieId + "/reviews");
+        if (!reviews.length) {
+          list.innerHTML = '<p class="muted">No reviews yet.</p>';
+          return;
+        }
+        const myId = Auth.userId() ? Number(Auth.userId()) : null;
+        list.innerHTML = reviews.map((r) => {
+          const mine = myId != null && r.userId === myId;
+          return (
+            '<div class="review-item">' +
+            "<strong>" + escapeHtml(r.username || ("User " + r.userId)) + "</strong>" +
+            (mine ? ' <span class="muted">(you)</span>' : "") +
+            '<p>' + escapeHtml(r.body) + "</p>" +
+            '<p class="muted" style="margin:0;font-size:0.8rem">' +
+            escapeHtml(String(r.updatedAt || r.createdAt || "")) +
+            "</p></div>"
+          );
+        }).join("");
+
+        const mine = reviews.find((r) => myId != null && r.userId === myId);
+        if (mine) {
+          document.getElementById("review-body").value = mine.body || "";
+        }
+      } catch (err) {
+        list.innerHTML = '<p class="muted">Could not load reviews.</p>';
+        showMessage(msg, err.message, "error");
+      }
+    }
 
     async function loadMovie() {
       if (!movieId) {
@@ -70,6 +154,7 @@
           '<p class="synopsis">' + escapeHtml(m.synopsis || "") + "</p>" +
           '<div class="btn-row">' +
           '<a class="btn btn-secondary" href="/movies.html">Back to list</a>' +
+          '<button type="button" class="btn btn-secondary" id="watchlist-btn">Add to watchlist</button>' +
           (Auth.isAdmin()
             ? '<button type="button" class="btn btn-danger" id="delete-btn">Delete</button>'
             : "") +
@@ -89,32 +174,46 @@
             }
           });
         }
+
+        const wlBtn = document.getElementById("watchlist-btn");
+        if (wlBtn) {
+          wlBtn.addEventListener("click", async () => {
+            clearMessage(msg);
+            if (!Auth.isLoggedIn()) {
+              showMessage(msg, "Please log in first.", "error");
+              return;
+            }
+            try {
+              if (onWatchlist) {
+                await api("/api/watchlist/" + movieId, { method: "DELETE", auth: true });
+                showMessage(msg, "Removed from watchlist.", "ok");
+              } else {
+                await api("/api/watchlist/" + movieId, { method: "POST", auth: true });
+                showMessage(msg, "Added to watchlist.", "ok");
+              }
+              await refreshWatchlistButton();
+            } catch (err) {
+              showMessage(msg, err.message, "error");
+            }
+          });
+        }
+
+        await refreshWatchlistButton();
       } catch (err) {
         panel.innerHTML = '<p class="muted">Could not load movie.</p>';
         showMessage(msg, err.message, "error");
       }
     }
 
-    function escapeHtml(s) {
-      return String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
     document.getElementById("rate-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       clearMessage(msg);
       if (!movieId) return;
-      const body = {
-        rating: Number(document.getElementById("rating").value)
-      };
       try {
         await api("/api/movies/" + movieId + "/ratings", {
           method: "POST",
           auth: true,
-          body
+          body: { rating: Number(document.getElementById("rating").value) }
         });
         showMessage(msg, "Rating saved.", "ok");
         loadMovie();
@@ -123,7 +222,42 @@
       }
     });
 
+    document.getElementById("review-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessage(msg);
+      if (!movieId) return;
+      try {
+        await api("/api/movies/" + movieId + "/reviews", {
+          method: "POST",
+          auth: true,
+          body: { body: document.getElementById("review-body").value.trim() }
+        });
+        showMessage(msg, "Review saved.", "ok");
+        loadReviews();
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+
+    document.getElementById("delete-review-btn").addEventListener("click", async () => {
+      clearMessage(msg);
+      if (!movieId || !Auth.isLoggedIn()) {
+        showMessage(msg, "Please log in first.", "error");
+        return;
+      }
+      if (!confirm("Delete your review for this movie?")) return;
+      try {
+        await api("/api/movies/" + movieId + "/reviews/me", { method: "DELETE", auth: true });
+        document.getElementById("review-body").value = "";
+        showMessage(msg, "Review deleted.", "ok");
+        loadReviews();
+      } catch (err) {
+        showMessage(msg, err.message, "error");
+      }
+    });
+
     loadMovie();
+    loadReviews();
   </script>
 </body>
 </html>

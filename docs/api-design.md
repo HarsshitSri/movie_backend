@@ -535,6 +535,54 @@ None (empty body)
 | `PUT` | `/api/movies/{id}` | ADMIN + JWT |
 | `DELETE` | `/api/movies/{id}` | ADMIN + JWT |
 | `POST` | `/api/movies/{movieId}/ratings` | JWT |
+| `GET` | `/api/movies/{movieId}/reviews` | No |
+| `POST` | `/api/movies/{movieId}/reviews` | JWT |
+| `DELETE` | `/api/movies/{movieId}/reviews/me` | JWT |
+| `GET` | `/api/watchlist` | JWT |
+| `GET` | `/api/watchlist/{movieId}/status` | JWT |
+| `POST` | `/api/watchlist/{movieId}` | JWT |
+| `DELETE` | `/api/watchlist/{movieId}` | JWT |
+
+---
+
+### 9. List reviews for a movie
+
+| | |
+|---|---|
+| **URL** | `/api/movies/{movieId}/reviews` |
+| **Method** | `GET` |
+| **Purpose** | List written reviews for a movie (newest updates first) |
+| **Authentication required** | No |
+
+### 10. Create or update own review
+
+| | |
+|---|---|
+| **URL** | `/api/movies/{movieId}/reviews` |
+| **Method** | `POST` |
+| **Purpose** | Upsert the authenticated user's text review (max 2000 chars) |
+| **Authentication required** | Yes — Bearer JWT |
+
+```json
+{ "body": "A stunning sci-fi journey." }
+```
+
+### 11. Delete own review
+
+| | |
+|---|---|
+| **URL** | `/api/movies/{movieId}/reviews/me` |
+| **Method** | `DELETE` |
+| **Authentication required** | Yes — Bearer JWT |
+
+### 12. Watchlist
+
+| Method | URL | Auth | Notes |
+|--------|-----|------|-------|
+| `GET` | `/api/watchlist` | JWT | My entries, newest first |
+| `GET` | `/api/watchlist/{movieId}/status` | JWT | `{ "onWatchlist": true\|false }` |
+| `POST` | `/api/watchlist/{movieId}` | JWT | Add (idempotent if already present) |
+| `DELETE` | `/api/watchlist/{movieId}` | JWT | Remove (idempotent if missing) |
 
 ---
 
@@ -543,9 +591,10 @@ None (empty body)
 The following are **not** exposed as API endpoints in the current codebase:
 
 - Movie title search (`MovieService.searchMoviesByTitle` exists without a controller)
-- Reviews, watchlist, favorites
+- Favorites
 - User profile management
 - Logout and refresh tokens
+- Admin moderation of others' reviews
 - Booking, theatres, and payments
 
 See [requirements.md](requirements.md) for planned scope.

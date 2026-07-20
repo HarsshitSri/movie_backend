@@ -63,5 +63,11 @@ public class Movie {
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Rating> ratings;
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Review> reviews;
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<WatchlistEntry> watchlistEntries;
 }
 

@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -117,6 +118,46 @@ class AuthAndMovieApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.averageRating").value(8.0))
                 .andExpect(jsonPath("$.ratingCount").value(1));
+
+        mockMvc.perform(get("/api/watchlist"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/watchlist/" + movieId)
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.movieId").value(movieId))
+                .andExpect(jsonPath("$.title").value("Interstellar"));
+
+        mockMvc.perform(get("/api/watchlist")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].movieId").value(movieId));
+
+        mockMvc.perform(post("/api/movies/" + movieId + "/reviews")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "body": "A stunning sci-fi journey." }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.body").value("A stunning sci-fi journey."))
+                .andExpect(jsonPath("$.movieId").value(movieId));
+
+        mockMvc.perform(get("/api/movies/" + movieId + "/reviews"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].body").value("A stunning sci-fi journey."));
+
+        mockMvc.perform(delete("/api/movies/" + movieId + "/reviews/me")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/movies/" + movieId + "/reviews"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        mockMvc.perform(delete("/api/watchlist/" + movieId)
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isNoContent());
     }
 
     private static String movieJson() {

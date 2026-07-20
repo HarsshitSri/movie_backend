@@ -64,3 +64,31 @@ Content-Type: application/json
 {
   "rating": 9
 }
+
+### 8. Add to watchlist (JWT)
+POST {{baseUrl}}/api/watchlist/1
+Authorization: Bearer {{token}}
+
+### 9. List my watchlist (JWT)
+GET {{baseUrl}}/api/watchlist
+Authorization: Bearer {{token}}
+
+### 10. Remove from watchlist (JWT)
+DELETE {{baseUrl}}/api/watchlist/1
+Authorization: Bearer {{token}}
+
+### 11. Write / update review (JWT; body only — user from token)
+POST {{baseUrl}}/api/movies/1/reviews
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "body": "A stunning sci-fi journey through space and time."
+}
+
+### 12. List reviews for a movie (public)
+GET {{baseUrl}}/api/movies/1/reviews
+
+### 13. Delete my review (JWT)
+DELETE {{baseUrl}}/api/movies/1/reviews/me
+Authorization: Bearer {{token}}

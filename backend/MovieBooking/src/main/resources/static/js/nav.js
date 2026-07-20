@@ -31,4 +31,8 @@
   document.querySelectorAll("[data-admin-only]").forEach((el) => {
     el.style.display = Auth.isAdmin() ? "" : "none";
   });
+
+  document.querySelectorAll("[data-auth-only]").forEach((el) => {
+    el.style.display = Auth.isLoggedIn() ? "" : "none";
+  });
 })();

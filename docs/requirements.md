@@ -19,7 +19,8 @@ Product requirements for the Movie Booking Backend project.
 | Movie title search API | Not exposed |
 | Genre filter / recommendations | Planned |
 | Reviews | Planned |
-| Watchlist / Favorites | Planned |
+| Watchlist | Implemented |
+| Favorites | Planned |
 | User profile management | Planned |
 | Logout / refresh tokens | Planned |
 | Booking / theatres / payments | Planned |
@@ -127,13 +128,13 @@ Administrators shall be able to:
 
 Users shall be able to:
 
-- Create review — **Planned**
-- Edit own review — **Planned**
-- Delete own review — **Planned**
+- Create review — **Implemented** (upsert via `POST /api/movies/{id}/reviews`)
+- Edit own review — **Implemented** (same upsert endpoint)
+- Delete own review — **Implemented** (`DELETE /api/movies/{id}/reviews/me`)
 
 Guests:
 
-- View reviews only — **Planned**
+- View reviews only — **Implemented**
 
 Admins:
 
@@ -159,9 +160,9 @@ Movie rating aggregates (`average_rating`, `rating_count`) shall update automati
 
 Users shall be able to:
 
-- Add movie — **Planned**
-- Remove movie — **Planned**
-- View watchlist — **Planned**
+- Add movie — **Implemented**
+- Remove movie — **Implemented**
+- View watchlist — **Implemented** (own list only)
 
 ---
 
@@ -234,7 +235,7 @@ The project target is complete when:
 - Tests pass with meaningful coverage
 - API documentation is complete
 
-**Current state:** Core auth, movie, and rating flows are implemented. Booking, reviews, profile features, enforced security, and full test/documentation coverage remain planned.
+**Current state:** Auth, movies, ratings, written reviews, and personal watchlist are implemented with JWT/RBAC. Booking, favorites, profile tooling, OpenAPI, and broader test/CI coverage remain planned.
 
 ---
 

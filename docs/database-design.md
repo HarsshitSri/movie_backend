@@ -34,14 +34,14 @@ PostgreSQL
 | Role | `roles` | `Role` |
 | Movie | `movies` | `Movie` |
 | Rating | `ratings` | `Rating` |
+| Review | `reviews` | `Review` |
+| Watchlist entry | `watchlist_entries` | `WatchlistEntry` |
 
 ### Planned (documented for future versions)
 
 | Entity | Description |
 |--------|-------------|
 | Genre | Movie categories |
-| Review | User reviews |
-| Watchlist | Movies saved for later |
 | Favorite | User's favorite movies |
 
 ---
@@ -55,14 +55,17 @@ PostgreSQL
 - One `User` → Many `Rating` (1:N); FK `ratings.user_id` → `users.id`
 - One `Movie` → Many `Rating` (1:N); FK `ratings.movie_id` → `movies.id`
 - Unique (`user_id`, `movie_id`) on `ratings` — one rating per user per movie (`uk_user_movie` in JPA)
+- One `User` → Many `Review` (1:N); FK `reviews.user_id` → `users.id`
+- One `Movie` → Many `Review` (1:N); FK `reviews.movie_id` → `movies.id`
+- Unique (`user_id`, `movie_id`) on `reviews` — one review per user per movie
+- One `User` → Many `WatchlistEntry` (1:N); FK `watchlist_entries.user_id` → `users.id`
+- One `Movie` → Many `WatchlistEntry` (1:N); FK `watchlist_entries.movie_id` → `movies.id`
+- Unique (`user_id`, `movie_id`) on `watchlist_entries`
 - Denormalized aggregates on `movies`: `average_rating`, `rating_count` (updated by `RatingServiceImpl`, not FK relationships)
 
 ### Planned (not in database or JPA today)
 
-- One `User` → Many `Review`
-- One `Movie` → Many `Review`
 - One `User` → Many `Favorite`
-- One `User` → Many `Watchlist` entry
 - Many `Movie` ↔ Many `Genre` (via `genres` / `movie_genres`)
 
 ### Not designed yet (roadmap only)
@@ -112,7 +115,8 @@ Planned asset: `assets/diagrams/database-schema-erd.png` ([ASSETS_PLAN.md](../as
 
 ### Outdated schema assumptions to avoid
 
-- Do not draw `reviews`, `watchlists`, `favorites`, or `genres` / `movie_genres` as current tables.
+- Do not draw `favorites` or `genres` / `movie_genres` as current tables (still planned).
+- Do draw `reviews` and `watchlist_entries` — they are implemented.
 - Do not draw booking-domain tables (`theatres`, `showtimes`, `bookings`, etc.) unless marked **planned / future**.
 - Do not show JWT or API layers on a database ERD; keep persistence model only.
 
@@ -205,7 +209,7 @@ Stores registered users for authentication and profile data.
 
 ### Purpose
 
-Stores movie catalog data. Referenced by ratings and future features (reviews, favorites, watchlists).
+Stores movie catalog data. Referenced by ratings, reviews, and watchlist entries.
 
 ---
 

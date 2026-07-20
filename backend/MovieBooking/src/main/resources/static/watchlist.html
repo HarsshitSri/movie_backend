@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Watchlist · Movie Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/index.html">Movie<span>Platform</span></a>
+      <nav class="nav">
+        <a href="/index.html" data-nav="index.html">Home</a>
+        <a href="/movies.html" data-nav="movies.html">Movies</a>
+        <a href="/watchlist.html" data-nav="watchlist.html" data-auth-only>Watchlist</a>
+        <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
+        <a href="/login.html" data-nav="login.html">Login</a>
+        <a href="/register.html" data-nav="register.html">Register</a>
+        <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
+        <span class="auth-state" id="auth-state"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Watchlist</h1>
+      <p>Movies you saved for later. Requires login.</p>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="panel">
+      <div id="watchlist-panel"><p class="muted">Loading…</p></div>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    const msg = document.getElementById("msg");
+    const panel = document.getElementById("watchlist-panel");
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function loadWatchlist() {
+      if (!Auth.isLoggedIn()) {
+        panel.innerHTML =
+          '<p class="muted">Please <a href="/login.html">log in</a> to view your watchlist.</p>';
+        return;
+      }
+      try {
+        const items = await api("/api/watchlist", { auth: true });
+        if (!items.length) {
+          panel.innerHTML =
+            '<p class="muted">Your watchlist is empty. Open a movie and click “Add to watchlist”.</p>';
+          return;
+        }
+        panel.innerHTML =
+          '<div class="table-wrap"><table><thead><tr>' +
+          "<th>Title</th><th>Avg rating</th><th>Added</th><th></th>" +
+          "</tr></thead><tbody>" +
+          items.map((item) =>
+            "<tr>" +
+            '<td><a href="/movie.html?id=' + item.movieId + '">' + escapeHtml(item.title) + "</a></td>" +
+            "<td>" + (item.averageRating ?? 0) + " · " + (item.ratingCount ?? 0) + "</td>" +
+            "<td>" + escapeHtml(String(item.addedAt || "")) + "</td>" +
+            '<td><button type="button" class="btn btn-secondary" data-remove="' + item.movieId + '">Remove</button></td>' +
+            "</tr>"
+          ).join("") +
+          "</tbody></table></div>";
+
+        panel.querySelectorAll("[data-remove]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            clearMessage(msg);
+            try {
+              await api("/api/watchlist/" + btn.getAttribute("data-remove"), {
+                method: "DELETE",
+                auth: true
+              });
+              showMessage(msg, "Removed.", "ok");
+              loadWatchlist();
+            } catch (err) {
+              showMessage(msg, err.message, "error");
+            }
+          });
+        });
+      } catch (err) {
+        panel.innerHTML = '<p class="muted">Could not load watchlist.</p>';
+        showMessage(msg, err.message, "error");
+      }
+    }
+
+    loadWatchlist();
+  </script>
+</body>
+</html>

@@ -13,10 +13,12 @@
 - Movie CRUD
 - Movie pagination and sorting
 - Movie ratings (`POST /api/movies/{movieId}/ratings`)
+- Written reviews (`GET`/`POST` `/api/movies/{movieId}/reviews`, `DELETE .../reviews/me`)
+- Personal watchlist (`/api/watchlist`)
 - Request validation (Jakarta Bean Validation)
 - Global exception handling for validation errors and movie-not-found
 - Docker and Docker Compose support
-- Basic HTML/CSS/JS UI
+- Basic HTML/CSS/JS UI (including watchlist page)
 - Context load test + API flow test (H2)
 
 ### Partial
@@ -28,7 +30,7 @@
 ## Planned
 
 - Swagger / OpenAPI
-- Broader exception handling coverage
+- Admin moderation of reviews
 - Booking module
 - Theatre module
 - Payment integration

@@ -17,6 +17,8 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | Inactive accounts rejected at login | Done |
 | Movie CRUD + pagination / sorting | Done |
 | Rate a movie (1–10); updates average & count | Done — rating bound to JWT user |
+| Written reviews (text, one per user per movie) | Done — separate from numeric ratings |
+| Personal watchlist (add / remove / list) | Done |
 | Layered architecture, DTOs, validation | Done |
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
@@ -91,7 +93,8 @@ movie_backend/
 |------|---------|
 | `/` or `/index.html` | Home + navigation |
 | `/movies.html` | Paginated movie list |
-| `/movie.html?id=` | Detail, rate (logged-in), delete (admin) |
+| `/movie.html?id=` | Detail, rate, review, watchlist toggle, delete (admin) |
+| `/watchlist.html` | Your saved movies (login required) |
 | `/movie-form.html` | Create movie (**ADMIN** only) |
 | `/login.html` / `/register.html` | Auth (login shows demo admin hint) |
 
@@ -119,6 +122,8 @@ Full request and security flow: [docs/architecture.md](docs/architecture.md)
 | `users` | Accounts (BCrypt `password_hash`, `account_status`) |
 | `movies` | Catalog + cached `average_rating` / `rating_count` |
 | `ratings` | One rating per user per movie (removed when movie is deleted) |
+| `reviews` | One written review per user per movie |
+| `watchlist_entries` | Personal watchlist (one entry per user per movie) |
 
 Details: [docs/database-design.md](docs/database-design.md)
 
@@ -136,6 +141,9 @@ Details: [docs/database-design.md](docs/database-design.md)
 | `GET /api/movies`, `GET /api/movies/{id}` | Public |
 | Create / update / delete movie | **ADMIN** + Bearer JWT |
 | Rate movie | Any authenticated user + Bearer JWT (user taken from token) |
+| Watchlist add / remove / list | Any authenticated user + Bearer JWT |
+| Write / delete own review | Any authenticated user + Bearer JWT |
+| List reviews for a movie | Public |
 
 **Seeded admin (local/demo):** `admin@movieplatform.local` / `Admin@12345`
 
@@ -157,6 +165,12 @@ Base URL: `http://localhost:8080`
 | `PUT` | `/api/movies/{id}` | ADMIN + JWT |
 | `DELETE` | `/api/movies/{id}` | ADMIN + JWT |
 | `POST` | `/api/movies/{movieId}/ratings` | JWT |
+| `GET` | `/api/movies/{movieId}/reviews` | No |
+| `POST` | `/api/movies/{movieId}/reviews` | JWT |
+| `DELETE` | `/api/movies/{movieId}/reviews/me` | JWT |
+| `GET` | `/api/watchlist` | JWT |
+| `POST` | `/api/watchlist/{movieId}` | JWT |
+| `DELETE` | `/api/watchlist/{movieId}` | JWT |
 
 Full reference: [docs/api-design.md](docs/api-design.md) · Quick requests: [docs/quickstart.http](docs/quickstart.http)
 
@@ -272,10 +286,10 @@ Uses H2. Covers context load plus an API flow: USER cannot create movies, ADMIN 
 | Phase | Scope | Status |
 |-------|-------|--------|
 | v1 | Auth, movies, ratings, JWT + ADMIN writes, Docker, UI | Done |
-| v2 | Richer admin tooling / OpenAPI / screenshots | Planned |
+| v2 | Watchlist + written reviews | Done |
 | v3 | Theatres, showtimes, booking | Planned |
 | v4 | Payments, notifications | Planned |
-| v5 | CI/CD, broader tests | Planned |
+| v5 | CI/CD, OpenAPI, broader tests | Planned |
 
 ---
 

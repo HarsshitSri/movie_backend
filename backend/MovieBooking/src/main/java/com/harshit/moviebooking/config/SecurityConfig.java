@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/movies.html",
                                 "/movie.html",
                                 "/movie-form.html",
+                                "/watchlist.html",
                                 "/css/**",
                                 "/js/**",
                                 "/favicon.ico",
@@ -47,7 +48,10 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies", "/api/movies/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/movies/*/ratings").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/movies/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/movies/*/reviews/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/movies").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/movies/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/movies/*").hasRole("ADMIN")
