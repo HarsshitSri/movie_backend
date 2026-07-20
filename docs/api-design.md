@@ -17,11 +17,18 @@ JWT filter is registered on the security filter chain (stateless sessions).
 | Rule | Endpoints |
 |------|-----------|
 | Public | `POST /api/auth/**`, `GET /api/movies`, `GET /api/movies/{id}` |
-| Authenticated (`Authorization: Bearer <token>`) | Create / update / delete movie, rate movie |
+| Authenticated | `POST /api/movies/{movieId}/ratings` |
+| `ROLE_ADMIN` | `POST` / `PUT` / `DELETE` `/api/movies` |
 
-Missing or invalid token on protected routes → **`401 Unauthorized`**.
+Missing or invalid token → **`401 Unauthorized`**.  
+Authenticated but not admin on admin routes → **`403 Forbidden`**.
 
-Roles (`USER`, `ADMIN`) are seeded on startup. Endpoint authorization does **not** yet distinguish roles (any authenticated user can write).
+Roles are seeded on startup. A demo admin is created if missing:
+
+- Email: `admin@movieplatform.local`
+- Password: `Admin@12345`
+
+`AuthResponse` fields: `token`, `userId`, `role` (`USER` or `ADMIN`).
 
 Ready-made requests: [quickstart.http](quickstart.http)
 
@@ -309,7 +316,7 @@ None
 | **URL** | `/api/movies` |
 | **Method** | `POST` |
 | **Purpose** | Create a new movie |
-| **Authentication required** | Yes — `Authorization: Bearer <token>` |
+| **Authentication required** | Yes — `ADMIN` + `Authorization: Bearer <token>` |
 
 #### Request Body (`MovieRequestDto`)
 
@@ -366,7 +373,7 @@ Returns the created movie. `id`, `averageRating` (`0`), and `ratingCount` (`0`) 
 | **URL** | `/api/movies/{id}` |
 | **Method** | `PUT` |
 | **Purpose** | Update an existing movie |
-| **Authentication required** | Yes — `Authorization: Bearer <token>` |
+| **Authentication required** | Yes — `ADMIN` + `Authorization: Bearer <token>` |
 
 #### Path Parameters
 
@@ -409,7 +416,7 @@ Returns the updated movie. `averageRating` and `ratingCount` are not modified by
 | **URL** | `/api/movies/{id}` |
 | **Method** | `DELETE` |
 | **Purpose** | Delete a movie by ID |
-| **Authentication required** | Yes — `Authorization: Bearer <token>` |
+| **Authentication required** | Yes — `ADMIN` + `Authorization: Bearer <token>` |
 
 #### Path Parameters
 
@@ -449,7 +456,7 @@ None (empty body)
 | **URL** | `/api/movies/{movieId}/ratings` |
 | **Method** | `POST` |
 | **Purpose** | Create or update a user's rating for a movie and recalculate movie aggregates |
-| **Authentication required** | Yes — `Authorization: Bearer <token>` |
+| **Authentication required** | Yes — any logged-in user (`Authorization: Bearer <token>`) |
 
 #### Path Parameters
 
@@ -524,10 +531,10 @@ None (empty body)
 | `POST` | `/api/auth/login` | No |
 | `GET` | `/api/movies` | No |
 | `GET` | `/api/movies/{id}` | No |
-| `POST` | `/api/movies` | Bearer JWT |
-| `PUT` | `/api/movies/{id}` | Bearer JWT |
-| `DELETE` | `/api/movies/{id}` | Bearer JWT |
-| `POST` | `/api/movies/{movieId}/ratings` | Bearer JWT |
+| `POST` | `/api/movies` | ADMIN + JWT |
+| `PUT` | `/api/movies/{id}` | ADMIN + JWT |
+| `DELETE` | `/api/movies/{id}` | ADMIN + JWT |
+| `POST` | `/api/movies/{movieId}/ratings` | JWT |
 
 ---
 

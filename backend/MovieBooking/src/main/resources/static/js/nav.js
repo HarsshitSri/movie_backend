@@ -13,7 +13,8 @@
 
   if (state) {
     if (Auth.isLoggedIn()) {
-      state.textContent = Auth.email() || "Signed in";
+      const role = Auth.role() || "USER";
+      state.textContent = (Auth.email() || "Signed in") + " · " + role;
     } else {
       state.textContent = "Guest";
     }
@@ -26,4 +27,8 @@
       window.location.href = "/index.html";
     });
   }
+
+  document.querySelectorAll("[data-admin-only]").forEach((el) => {
+    el.style.display = Auth.isAdmin() ? "" : "none";
+  });
 })();

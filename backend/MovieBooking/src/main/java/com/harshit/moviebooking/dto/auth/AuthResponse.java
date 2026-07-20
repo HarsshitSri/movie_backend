@@ -1,6 +1,9 @@
 package com.harshit.moviebooking.dto.auth;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -9,5 +12,6 @@ import lombok.*;
 public class AuthResponse {
 
     private String token;
-
+    private Long userId;
+    private String role;
 }

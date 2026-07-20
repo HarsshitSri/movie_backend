@@ -3,16 +3,16 @@ package com.harshit.moviebooking.service.impl;
 import com.harshit.moviebooking.dto.auth.AuthResponse;
 import com.harshit.moviebooking.dto.auth.LoginRequest;
 import com.harshit.moviebooking.dto.auth.RegisterRequest;
+import com.harshit.moviebooking.entity.Role;
+import com.harshit.moviebooking.entity.User;
+import com.harshit.moviebooking.enums.AccountStatus;
+import com.harshit.moviebooking.enums.RoleName;
 import com.harshit.moviebooking.repository.RoleRepo;
 import com.harshit.moviebooking.repository.UserRepo;
 import com.harshit.moviebooking.security.JwtService;
 import com.harshit.moviebooking.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.harshit.moviebooking.entity.Role;
-import com.harshit.moviebooking.entity.User;
-import com.harshit.moviebooking.enums.AccountStatus;
-import com.harshit.moviebooking.enums.RoleName;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +28,6 @@ public class AuthServiceImpl implements AuthService {
                            RoleRepo roleRepository,
                            PasswordEncoder passwordEncoder,
                            JwtService jwtService) {
-
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -37,7 +36,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
@@ -50,7 +48,6 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
 
         User user = new User();
-
         user.setUsername(request.getUsername());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -63,23 +60,27 @@ public class AuthServiceImpl implements AuthService {
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
-
-        String token = jwtService.generateToken(savedUser.getEmail());
-
-        return new AuthResponse(token);
+        return toAuthResponse(savedUser);
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
-
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailWithRole(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid email or password");
         }
 
+        return toAuthResponse(user);
+    }
+
+    private AuthResponse toAuthResponse(User user) {
         String token = jwtService.generateToken(user.getEmail());
-        return new AuthResponse(token);
+        return new AuthResponse(
+                token,
+                user.getId(),
+                user.getRole().getName().name()
+        );
     }
 }

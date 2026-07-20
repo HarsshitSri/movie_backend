@@ -13,7 +13,7 @@
       <nav class="nav">
         <a href="/index.html" data-nav="index.html">Home</a>
         <a href="/movies.html" data-nav="movies.html">Movies</a>
-        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
         <a href="/login.html" data-nav="login.html">Login</a>
         <a href="/register.html" data-nav="register.html">Register</a>
         <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
@@ -27,7 +27,7 @@
       <h1>Browse movies. Rate what you watch.</h1>
       <p>
         Simple UI over the Spring Boot API — register, sign in, browse the catalog,
-        and submit ratings. Write actions need a JWT from login or register.
+        and submit ratings. Creating or deleting movies requires an <strong>ADMIN</strong> account.
       </p>
     </section>
 
@@ -46,9 +46,9 @@
           <strong>Login</strong>
           <span>Sign in to unlock writes</span>
         </a>
-        <a class="action-link" href="/movie-form.html">
+        <a class="action-link" href="/movie-form.html" data-admin-only>
           <strong>Add movie</strong>
-          <span>Requires authentication</span>
+          <span>Admin only</span>
         </a>
       </div>
     </section>

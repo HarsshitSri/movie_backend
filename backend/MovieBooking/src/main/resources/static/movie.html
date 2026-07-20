@@ -13,7 +13,7 @@
       <nav class="nav">
         <a href="/index.html" data-nav="index.html">Home</a>
         <a href="/movies.html" data-nav="movies.html">Movies</a>
-        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
         <a href="/login.html" data-nav="login.html">Login</a>
         <a href="/register.html" data-nav="register.html">Register</a>
         <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
@@ -31,7 +31,7 @@
 
     <section class="panel">
       <h2>Rate this movie</h2>
-      <p class="muted">Requires login. Send your numeric user id (from registration order / DB).</p>
+      <p class="muted">Requires login. Your user id is filled from the last login when available.</p>
       <form id="rate-form">
         <div class="row">
           <div class="field">
@@ -75,20 +75,25 @@
           '<p class="synopsis">' + escapeHtml(m.synopsis || "") + "</p>" +
           '<div class="btn-row">' +
           '<a class="btn btn-secondary" href="/movies.html">Back to list</a>' +
-          '<button type="button" class="btn btn-danger" id="delete-btn">Delete</button>' +
+          (Auth.isAdmin()
+            ? '<button type="button" class="btn btn-danger" id="delete-btn">Delete</button>'
+            : "") +
           "</div>";
 
-        document.getElementById("delete-btn").addEventListener("click", async () => {
-          if (!confirm("Delete this movie?")) return;
-          clearMessage(msg);
-          try {
-            await api("/api/movies/" + movieId, { method: "DELETE", auth: true });
-            showMessage(msg, "Deleted. Redirecting…", "ok");
-            setTimeout(() => (window.location.href = "/movies.html"), 500);
-          } catch (err) {
-            showMessage(msg, err.message, "error");
-          }
-        });
+        const deleteBtn = document.getElementById("delete-btn");
+        if (deleteBtn) {
+          deleteBtn.addEventListener("click", async () => {
+            if (!confirm("Delete this movie?")) return;
+            clearMessage(msg);
+            try {
+              await api("/api/movies/" + movieId, { method: "DELETE", auth: true });
+              showMessage(msg, "Deleted. Redirecting…", "ok");
+              setTimeout(() => (window.location.href = "/movies.html"), 500);
+            } catch (err) {
+              showMessage(msg, err.message, "error");
+            }
+          });
+        }
       } catch (err) {
         panel.innerHTML = '<p class="muted">Could not load movie.</p>';
         showMessage(msg, err.message, "error");
@@ -125,6 +130,11 @@
     });
 
     loadMovie();
+
+    const storedUserId = Auth.userId();
+    if (storedUserId) {
+      document.getElementById("userId").value = storedUserId;
+    }
   </script>
 </body>
 </html>

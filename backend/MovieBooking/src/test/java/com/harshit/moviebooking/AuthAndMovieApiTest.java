@@ -2,6 +2,7 @@ package com.harshit.moviebooking;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.harshit.moviebooking.config.RoleDataInitializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,7 +28,7 @@ class AuthAndMovieApiTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void registerLoginCreateMovieAndList() throws Exception {
+    void userCannotCreateMovieButAdminCan() throws Exception {
         String registerBody = """
                 {
                   "username": "apitestuser",
@@ -44,26 +45,11 @@ class AuthAndMovieApiTest {
                         .content(registerBody))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.userId").isNumber())
                 .andReturn();
 
-        String registerToken = objectMapper.readTree(registerResult.getResponse().getContentAsString())
-                .get("token")
-                .asText();
-        assertThat(registerToken).isNotBlank();
-
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "email": "apitest@example.com",
-                                  "password": "Password@123"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty())
-                .andReturn();
-
-        String token = objectMapper.readTree(loginResult.getResponse().getContentAsString())
+        String userToken = objectMapper.readTree(registerResult.getResponse().getContentAsString())
                 .get("token")
                 .asText();
 
@@ -72,8 +58,33 @@ class AuthAndMovieApiTest {
                         .content(movieJson()))
                 .andExpect(status().isUnauthorized());
 
+        mockMvc.perform(post("/api/movies")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(movieJson()))
+                .andExpect(status().isForbidden());
+
+        MvcResult adminLogin = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(
+                                RoleDataInitializer.ADMIN_EMAIL,
+                                RoleDataInitializer.ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andReturn();
+
+        String adminToken = objectMapper.readTree(adminLogin.getResponse().getContentAsString())
+                .get("token")
+                .asText();
+        assertThat(adminToken).isNotBlank();
+
         MvcResult createResult = mockMvc.perform(post("/api/movies")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(movieJson()))
                 .andExpect(status().isCreated())

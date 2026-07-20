@@ -3,7 +3,7 @@
 @baseUrl = http://localhost:8080
 @token = paste-jwt-here
 
-### 1. Register
+### 1. Register (creates USER)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -16,7 +16,7 @@ Content-Type: application/json
   "dateOfBirth": "2003-07-25"
 }
 
-### 2. Login
+### 2. Login as USER
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -25,10 +25,19 @@ Content-Type: application/json
   "password": "Password@123"
 }
 
-### 3. List movies (public)
+### 3. Login as seeded ADMIN (for create/update/delete movies)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@movieplatform.local",
+  "password": "Admin@12345"
+}
+
+### 4. List movies (public)
 GET {{baseUrl}}/api/movies?page=0&size=10&sort=title&direction=asc
 
-### 4. Create movie (requires JWT)
+### 5. Create movie (requires ADMIN JWT)
 POST {{baseUrl}}/api/movies
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -44,10 +53,10 @@ Content-Type: application/json
   "posterUrl": "https://example.com/poster.jpg"
 }
 
-### 5. Get movie by ID (public)
+### 6. Get movie by ID (public)
 GET {{baseUrl}}/api/movies/1
 
-### 6. Rate movie (requires JWT)
+### 7. Rate movie (any authenticated user)
 POST {{baseUrl}}/api/movies/1/ratings
 Authorization: Bearer {{token}}
 Content-Type: application/json

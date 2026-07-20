@@ -13,7 +13,7 @@
       <nav class="nav">
         <a href="/index.html" data-nav="index.html">Home</a>
         <a href="/movies.html" data-nav="movies.html">Movies</a>
-        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
         <a href="/login.html" data-nav="login.html">Login</a>
         <a href="/register.html" data-nav="register.html">Register</a>
         <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
@@ -25,12 +25,12 @@
   <main>
     <section class="hero">
       <h1>Add movie</h1>
-      <p>Requires a JWT. <a href="/login.html">Log in</a> if you have not already.</p>
+      <p>Admin only. Seeded admin: <code>admin@movieplatform.local</code> / <code>Admin@12345</code></p>
     </section>
 
     <div id="msg" class="msg"></div>
 
-    <section class="panel">
+    <section class="panel" id="form-panel">
       <form id="movie-form">
         <div class="field">
           <label for="title">Title</label>
@@ -88,13 +88,27 @@
   <script src="/js/api.js"></script>
   <script src="/js/nav.js"></script>
   <script>
+    (function () {
+      const msg = document.getElementById("msg");
+      if (!Auth.isLoggedIn()) {
+        showMessage(msg, "Please log in as an admin first.", "error");
+        document.getElementById("form-panel").style.display = "none";
+        return;
+      }
+      if (!Auth.isAdmin()) {
+        showMessage(msg, "Only ADMIN users can create movies.", "error");
+        document.getElementById("form-panel").style.display = "none";
+        return;
+      }
+    })();
+
     document.getElementById("movie-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const msg = document.getElementById("msg");
       clearMessage(msg);
 
-      if (!Auth.isLoggedIn()) {
-        showMessage(msg, "Please log in first.", "error");
+      if (!Auth.isAdmin()) {
+        showMessage(msg, "Only ADMIN users can create movies.", "error");
         return;
       }
 

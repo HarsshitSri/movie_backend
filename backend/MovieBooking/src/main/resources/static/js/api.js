@@ -3,29 +3,51 @@ const API_BASE = "";
 const Auth = {
   tokenKey: "mb_token",
   userKey: "mb_user",
+  roleKey: "mb_role",
+  userIdKey: "mb_user_id",
 
   getToken() {
     return localStorage.getItem(this.tokenKey);
   },
 
-  setSession(token, email) {
-    localStorage.setItem(this.tokenKey, token);
-    if (email) {
-      localStorage.setItem(this.userKey, email);
+  setSession(auth) {
+    localStorage.setItem(this.tokenKey, auth.token);
+    if (auth.email) {
+      localStorage.setItem(this.userKey, auth.email);
+    }
+    if (auth.role) {
+      localStorage.setItem(this.roleKey, auth.role);
+    }
+    if (auth.userId != null) {
+      localStorage.setItem(this.userIdKey, String(auth.userId));
     }
   },
 
   clear() {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    localStorage.removeItem(this.roleKey);
+    localStorage.removeItem(this.userIdKey);
   },
 
   email() {
     return localStorage.getItem(this.userKey);
   },
 
+  role() {
+    return localStorage.getItem(this.roleKey);
+  },
+
+  userId() {
+    return localStorage.getItem(this.userIdKey);
+  },
+
   isLoggedIn() {
     return Boolean(this.getToken());
+  },
+
+  isAdmin() {
+    return this.role() === "ADMIN";
   }
 };
 
@@ -72,6 +94,12 @@ async function api(path, options = {}) {
 }
 
 function formatError(data, status) {
+  if (status === 403) {
+    return (data && (data.message || data.error)) || "Forbidden — admin role required.";
+  }
+  if (status === 401) {
+    return (data && (data.message || data.error)) || "Unauthorized — please log in.";
+  }
   if (!data) {
     return "Request failed (" + status + ")";
   }

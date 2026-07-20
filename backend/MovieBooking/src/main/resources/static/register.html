@@ -13,7 +13,7 @@
       <nav class="nav">
         <a href="/index.html" data-nav="index.html">Home</a>
         <a href="/movies.html" data-nav="movies.html">Movies</a>
-        <a href="/movie-form.html" data-nav="movie-form.html">Add movie</a>
+        <a href="/movie-form.html" data-nav="movie-form.html" data-admin-only>Add movie</a>
         <a href="/login.html" data-nav="login.html">Login</a>
         <a href="/register.html" data-nav="register.html">Register</a>
         <button type="button" class="btn btn-secondary" id="logout-btn">Log out</button>
@@ -88,7 +88,12 @@
       };
       try {
         const data = await api("/api/auth/register", { method: "POST", body });
-        Auth.setSession(data.token, email);
+        Auth.setSession({
+          token: data.token,
+          email,
+          role: data.role,
+          userId: data.userId
+        });
         showMessage(msg, "Account created. Redirecting…", "ok");
         setTimeout(() => (window.location.href = "/movies.html"), 600);
       } catch (err) {

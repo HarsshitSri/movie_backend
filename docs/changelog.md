@@ -8,27 +8,25 @@
 - PostgreSQL integration with environment-based datasource configuration
 - User registration and login
 - JWT token generation and filter on the security chain
-- JWT required for movie writes and ratings (`GET` movies remain public)
-- BCrypt password encryption
-- Role seeding on startup (`USER`, `ADMIN`)
+- Role-based access: movie create/update/delete require `ADMIN`; ratings require authentication
+- Seeded roles + demo admin user (`admin@movieplatform.local`)
 - Movie CRUD
 - Movie pagination and sorting
 - Movie ratings (`POST /api/movies/{movieId}/ratings`)
 - Request validation (Jakarta Bean Validation)
 - Global exception handling for validation errors and movie-not-found
 - Docker and Docker Compose support
+- Basic HTML/CSS/JS UI
 - Context load test + API flow test (H2)
 
 ### Partial
 
-- Role storage exists (`USER`, `ADMIN`), but role-based endpoint rules are not active (any authenticated user can write)
 - Movie title search exists in `MovieService` only (no API endpoint)
 
 ---
 
 ## Planned
 
-- Role-based access control (`ADMIN` vs `USER`)
 - Swagger / OpenAPI
 - Broader exception handling coverage
 - Booking module

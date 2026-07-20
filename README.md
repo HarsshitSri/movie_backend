@@ -19,9 +19,9 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | Layered architecture, DTOs, validation | Done |
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
-| JWT required on write endpoints | Done — `GET` movies public; create/update/delete/rate need Bearer token |
+| JWT required on write endpoints | Done — `GET` movies public; create/update/delete need **ADMIN**; ratings need any logged-in user |
 | Basic HTML/CSS/JS UI for navigation | Done — served at `/` |
-| Role-based access (`USER` / `ADMIN` on endpoints) | Partial — roles stored; not used for authorization rules yet |
+| Role-based access (`USER` / `ADMIN`) | Done for movie writes; seeded admin account |
 | Theatres / booking / payments | Planned |
 
 **Why it is not “just CRUD”:** JWT-protected writes, denormalized rating aggregates, role seeding, and design docs under `docs/`.
@@ -123,7 +123,7 @@ Details: [docs/database-design.md](docs/database-design.md)
 
 ## Authentication
 
-**Implemented:** register, login, BCrypt hashing, JWT generation, JWT filter on the security chain, roles seeded on startup.
+**Implemented:** register, login, BCrypt hashing, JWT generation, JWT filter on the security chain, roles seeded on startup, seeded admin user.
 
 **Access rules today**
 
@@ -131,9 +131,12 @@ Details: [docs/database-design.md](docs/database-design.md)
 |-----------|------|
 | `POST /api/auth/**` | Public |
 | `GET /api/movies`, `GET /api/movies/{id}` | Public |
-| Create / update / delete movie, rate movie | Requires `Authorization: Bearer <token>` |
+| Create / update / delete movie | **ADMIN** + Bearer JWT |
+| Rate movie | Any authenticated user + Bearer JWT |
 
-Role names exist in the DB; endpoint rules do **not** yet distinguish `USER` vs `ADMIN` (any authenticated user can write).
+**Seeded admin (local/demo):** `admin@movieplatform.local` / `Admin@12345`
+
+Register always creates a `USER`. Auth responses include `token`, `userId`, and `role`.
 
 ---
 
@@ -147,10 +150,10 @@ Base URL: `http://localhost:8080`
 | `POST` | `/api/auth/login` | No |
 | `GET` | `/api/movies` | No |
 | `GET` | `/api/movies/{id}` | No |
-| `POST` | `/api/movies` | Bearer JWT |
-| `PUT` | `/api/movies/{id}` | Bearer JWT |
-| `DELETE` | `/api/movies/{id}` | Bearer JWT |
-| `POST` | `/api/movies/{movieId}/ratings` | Bearer JWT |
+| `POST` | `/api/movies` | ADMIN + JWT |
+| `PUT` | `/api/movies/{id}` | ADMIN + JWT |
+| `DELETE` | `/api/movies/{id}` | ADMIN + JWT |
+| `POST` | `/api/movies/{movieId}/ratings` | JWT |
 
 Full reference: [docs/api-design.md](docs/api-design.md) · Quick requests: [docs/quickstart.http](docs/quickstart.http)
 
@@ -240,7 +243,7 @@ cd backend/MovieBooking
 ./mvnw test
 ```
 
-Uses H2. Includes a context-load test and an API flow test (register → login → create movie with JWT). Manual scenarios: [docs/testing.md](docs/testing.md)
+Uses H2. Includes a context-load test and an API flow test (USER forbidden on create; ADMIN can create). Manual scenarios: [docs/testing.md](docs/testing.md)
 
 ---
 
@@ -265,11 +268,11 @@ Uses H2. Includes a context-load test and an API flow test (register → login �
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| v1 | Auth, movies, ratings, PostgreSQL, Docker, JWT on writes | In progress |
-| v2 | Role-based access (`ADMIN` vs `USER`) | Planned |
+| v1 | Auth, movies, ratings, JWT, ADMIN movie writes, Docker, UI | In progress |
+| v2 | Richer admin tooling / OpenAPI | Planned |
 | v3 | Theatres, showtimes, booking | Planned |
 | v4 | Payments, notifications | Planned |
-| v5 | OpenAPI, CI/CD, broader tests | Planned |
+| v5 | CI/CD, broader tests | Planned |
 
 ---
 

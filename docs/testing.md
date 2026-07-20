@@ -15,9 +15,9 @@ From `backend/MovieBooking/`:
 | Test | What it covers |
 |------|----------------|
 | `MovieBookingApplicationTests` | Context loads (H2) |
-| `AuthAndMovieApiTest` | Register → login → create movie (JWT) → public GET list |
+| `AuthAndMovieApiTest` | Register USER → 403 on create movie → ADMIN login → create movie → public GET |
 
-Tests use H2 via `src/test/resources/application.properties`. Roles are seeded by `RoleDataInitializer`.
+Roles and demo admin are seeded by `RoleDataInitializer`.
 
 ---
 
@@ -26,27 +26,26 @@ Tests use H2 via `src/test/resources/application.properties`. Roles are seeded b
 **Base URL:** `http://localhost:8080`  
 **Ready-made requests:** [quickstart.http](quickstart.http)
 
+**Seeded admin:** `admin@movieplatform.local` / `Admin@12345`
+
 ### Ordered smoke flow
 
 | Step | Request | Auth | Expect |
 |------|---------|------|--------|
-| 1 | `POST /api/auth/register` | No | `201` + token |
-| 2 | `POST /api/auth/login` | No | `200` + token |
-| 3 | `POST /api/movies` without token | — | `401` |
-| 4 | `POST /api/movies` with Bearer token | Yes | `201` |
+| 1 | `POST /api/auth/register` | No | `201` + token, `role: USER` |
+| 2 | `POST /api/movies` with USER token | USER | `403` |
+| 3 | `POST /api/auth/login` as admin | No | `200` + `role: ADMIN` |
+| 4 | `POST /api/movies` with ADMIN token | ADMIN | `201` |
 | 5 | `GET /api/movies` | No | `200` |
-| 6 | `POST /api/movies/{id}/ratings` with token | Yes | `201` |
-| 7 | `GET /api/movies/{id}` | No | Updated averages |
-
-Full payloads: [api-design.md](api-design.md)
+| 6 | `POST .../ratings` with USER token | USER | `201` |
 
 ---
 
 ## Security note
 
 - Public: auth endpoints + `GET` movies
-- Authenticated: movie writes + ratings
-- Role-based rules (`ADMIN`-only deletes, etc.) are **not** implemented yet
+- Authenticated: ratings
+- Admin only: movie create / update / delete
 
 ---
 
