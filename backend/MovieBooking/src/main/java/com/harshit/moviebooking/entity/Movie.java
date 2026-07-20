@@ -49,7 +49,7 @@ public class Movie {
     @Column(name = "poster_url", columnDefinition = "TEXT")
     private String posterUrl;
 
-    @Column(name = "average_rating", precision = 3, scale = 2)
+    @Column(name = "average_rating", precision = 4, scale = 2)
     private BigDecimal averageRating;
 
     @Column(name = "rating_count")

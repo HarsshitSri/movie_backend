@@ -64,7 +64,8 @@
         const m = await api("/api/movies/" + movieId);
         document.title = m.title + " · Movie Platform";
         panel.innerHTML =
-          "<h1 style=\"margin:0 0 0.35rem;font-size:1.5rem\">" + escapeHtml(m.title) + "</h1>" +
+          '<div class="poster-placeholder">Poster of the movie</div>' +
+          "<h1 style=\"margin:0.85rem 0 0.35rem;font-size:1.5rem\">" + escapeHtml(m.title) + "</h1>" +
           '<div class="movie-meta">' +
           "<span>" + (m.releaseDate || "—") + "</span>" +
           "<span>" + (m.runtimeMinutes || "—") + " min</span>" +

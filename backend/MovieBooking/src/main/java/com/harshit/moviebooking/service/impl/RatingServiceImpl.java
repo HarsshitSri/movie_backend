@@ -68,7 +68,8 @@ public class RatingServiceImpl implements RatingService {
                 .average()
                 .orElse(0.0);
 
-        movie.setAverageRating(BigDecimal.valueOf(average));
+        movie.setAverageRating(
+                BigDecimal.valueOf(average).setScale(2, java.math.RoundingMode.HALF_UP));
         movie.setRatingCount(ratings.size());
 
         movieRepository.save(movie);

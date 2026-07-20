@@ -544,6 +544,26 @@ th {
   margin: 0.85rem 0 1.1rem;
 }
 
+.poster-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  max-width: 220px;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 1rem;
+  color: var(--ink-soft);
+  background: linear-gradient(
+    145deg,
+    rgba(45, 212, 191, 0.12),
+    rgba(240, 163, 94, 0.1)
+  );
+  border: 1px dashed rgba(244, 241, 234, 0.2);
+}
+
 .movie-meta span {
   font-size: 0.82rem;
   color: var(--ink-soft);

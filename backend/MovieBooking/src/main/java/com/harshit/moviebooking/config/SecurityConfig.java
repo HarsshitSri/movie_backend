@@ -42,7 +42,8 @@ public class SecurityConfig {
                                 "/movie-form.html",
                                 "/css/**",
                                 "/js/**",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/error"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies", "/api/movies/*").permitAll()
