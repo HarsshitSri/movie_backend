@@ -108,7 +108,7 @@ The initial scaffold (`8fa97a4`) used **Spring Boot 4.1.0** and **Java 26**. The
 |---------|------|
 | Stateless authentication scales horizontally in theory | Token revocation and refresh require additional design (refresh tokens are **planned**, not implemented) |
 | Common pattern for SPA/mobile clients | Secret management and expiration must be configured carefully |
-| Integrates with Spring Security filter model | **Current gap:** `SecurityConfig` uses `permitAll()` and does not register `JwtAuthenticationFilter` in the chain |
+| Integrates with Spring Security filter model | Role-based rules (`ADMIN` vs `USER`) not applied yet; ratings still accept `userId` in the body |
 
 ---
 
@@ -119,7 +119,7 @@ The initial scaffold (`8fa97a4`) used **Spring Boot 4.1.0** and **Java 26**. The
 - **BCrypt** password hashing via `BCryptPasswordEncoder` (`PasswordConfig`)
 - `DaoAuthenticationProvider` and `AuthenticationManager` beans (`ApplicationConfig`)
 - `CustomUserDetailsService` and `CustomUserDetails` for Spring Security integration
-- `SecurityConfig` with CSRF disabled and `permitAll()` for all routes
+- `SecurityConfig` with CSRF disabled, JWT filter registered, public auth + GET movies, authenticated writes
 
 ### Why it was chosen
 - Spring Security is the standard security stack for Spring Boot applications
@@ -413,7 +413,7 @@ The following are **planned or discussed** in requirements/changelog but **not i
 | OAuth 2.0 / social login | Not referenced in requirements or code |
 | Microservices | Monolith structure only |
 | Redis / caching | Not referenced |
-| Enforced endpoint authorization | JWT issued but `permitAll()` in `SecurityConfig` |
+| Role-based endpoint authorization | JWT protects writes; `USER`/`ADMIN` not distinguished in rules yet |
 
 ---
 

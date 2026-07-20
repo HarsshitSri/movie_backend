@@ -12,8 +12,8 @@ Product requirements for the Movie Booking Backend project.
 |------------------|--------|
 | Register / Login | Implemented |
 | JWT issuance | Implemented |
-| Endpoint authorization | Partial — not enforced yet |
-| Movie browse / view / CRUD | Implemented |
+| Endpoint authorization | JWT required for writes; role rules planned |
+| Movie browse / view / CRUD | Implemented (writes require JWT) |
 | Movie pagination / sorting | Implemented |
 | Movie ratings (1–10) | Implemented |
 | Movie title search API | Not exposed |
@@ -217,8 +217,8 @@ Recommend movies based on:
 | One user can review a movie only once | Planned |
 | Ratings must be between 1 and 10 | Implemented |
 | Guests cannot create reviews | Planned |
-| Guests cannot modify data | Planned (authorization not enforced yet) |
-| Only admins may delete movies | Planned (not enforced yet) |
+| Guests cannot modify data | Implemented for movie writes / ratings (JWT required); guests can still GET movies |
+| Only admins may delete movies | Planned (not enforced yet — any authenticated user can delete) |
 | Deleted users should not remove movie data | Planned |
 
 ---

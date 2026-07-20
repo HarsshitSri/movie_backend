@@ -17,7 +17,7 @@ com.harshit.moviebooking
 ├── config                            # Spring configuration beans
 │   ├── ApplicationConfig             # AuthenticationManager, DaoAuthenticationProvider
 │   ├── PasswordConfig                # BCrypt PasswordEncoder bean
-│   └── SecurityConfig                # SecurityFilterChain (permitAll)
+│   └── SecurityConfig                # SecurityFilterChain (JWT on writes)
 ├── controller                        # REST API layer
 │   ├── AuthController
 │   ├── MovieController
@@ -76,7 +76,7 @@ Client → Controller → Service → Repository → PostgreSQL
 
 That is directionally correct but **incomplete**. The implementation also includes:
 
-- Spring Security filter chain (currently `permitAll()`)
+- Spring Security filter chain (JWT filter registered; public auth + GET movies)
 - Jakarta Bean Validation on controller inputs
 - DTOs at the API boundary (entities are not returned)
 - Mappers inside services (not a separate Spring bean layer)
@@ -89,8 +89,9 @@ Client (HTTP/JSON)
     │
     ▼
 Spring Security FilterChain
-    │   SecurityConfig: csrf disabled, anyRequest().permitAll()
-    │   JwtAuthenticationFilter exists but is NOT registered in the chain
+    │   Stateless JWT; JwtAuthenticationFilter registered
+    │   Public: /api/auth/**, GET /api/movies, GET /api/movies/{id}
+    │   Authenticated: movie writes + ratings
     ▼
 @RestController
     │   Accepts request DTOs (@RequestBody)
@@ -156,8 +157,8 @@ Security components
     └── ApplicationConfig → CustomUserDetailsService, PasswordEncoder
 
 Config
-    └── SecurityConfig injects JwtAuthenticationFilter and AuthenticationProvider
-        (both unused in the current SecurityFilterChain definition)
+    └── SecurityConfig registers JwtAuthenticationFilter and AuthenticationProvider
+        (JWT required for write endpoints; GET movies and auth are public)
 ```
 
 **Constructor injection** is used throughout. Controllers depend on service interfaces, not implementations.
@@ -343,7 +344,7 @@ There is **no booking-flow diagram** in this repository. Booking, theatres, show
      │ JSON
      ▼
 ┌─────────────────────┐
-│ Spring Security     │  permitAll(); JWT filter not registered
+│ Spring Security     │  JWT filter registered; GET movies + auth public
 └─────────┬───────────┘
           ▼
 ┌─────────────────────┐
@@ -367,16 +368,14 @@ There is **no booking-flow diagram** in this repository. Booking, theatres, show
 
 | Shown in diagram | Matches code? | Notes |
 |------------------|---------------|-------|
-| `Spring Security` with `permitAll()` | Yes | `SecurityConfig.securityFilterChain()` |
-| JWT filter not registered | Yes | `JwtAuthenticationFilter` is a bean but never added via `http.addFilterBefore(...)` |
+| `Spring Security` with JWT filter | Yes | `addFilterBefore` + `STATELESS` sessions |
+| JWT filter registered | Yes | Wired in `SecurityConfig` |
 | `Controller` with DTO + `@Valid` | Yes | `AuthController`, `MovieController`, `RatingController` |
 | `Service (impl)` + Mapper | Yes | `MovieMapper`, `RatingMapper`; auth maps `User` manually |
 | `Repository` → PostgreSQL | Yes | `UserRepo`, `RoleRepo`, `MovieRepo`, `RatingRepository` |
 | Response DTO mapping on return path | **Not shown** | Services map entities to response DTOs before `ResponseEntity` |
 | `GlobalExceptionHandler` | **Not shown** | Handles validation (`400`) and `MovieNotFoundException` (`404`) only |
-| `dto` as a separate package/layer | **Not shown** | DTOs live in `com.harshit.moviebooking.dto.*` |
-| `entity` layer | **Not shown** | JPA entities are used inside services, not returned by controllers |
-| Booking / payment modules | **Not applicable** | Not implemented |
+| Role-based (`ADMIN` only) rules | **No** | Any authenticated user can write |
 
 For the full path including DTO mapping and errors, use the [happy-path](#actual-request-flow-happy-path) and [error-flow](#response--error-flow) diagrams above.
 
@@ -394,29 +393,29 @@ AuthServiceImpl ──────► UserRepo / RoleRepo
       │                   PostgreSQL
       └──── JwtService ──► AuthResponse (token)
 
-JwtAuthenticationFilter (component exists, not in filter chain)
+JwtAuthenticationFilter (registered before UsernamePasswordAuthenticationFilter)
       │
       ├──── JwtService
-      └──── CustomUserDetailsService ──► UserRepo
+      └──── CustomUserDetailsService ──► UserRepo.findByEmailWithRole
 ```
 
 **Implementation alignment**
 
 | Path | Matches code? | Notes |
 |------|---------------|-------|
-| Register → `AuthServiceImpl` → repos → BCrypt → JWT → `AuthResponse` | Yes | Default role `RoleName.USER` via `RoleRepo.findByName` |
+| Register → `AuthServiceImpl` → repos → BCrypt → JWT → `AuthResponse` | Yes | Default role `RoleName.USER`; roles seeded by `RoleDataInitializer` |
 | Login → `UserRepo.findByEmail` → `PasswordEncoder.matches` → JWT | Yes | Does **not** call `AuthenticationManager.authenticate()` |
-| `JwtAuthenticationFilter` branch | **Not active** | Filter is injected into `SecurityConfig` but unused in `securityFilterChain()` |
-| `CustomUserDetailsService` on live requests | **Not active** | Only referenced by the inactive filter and `ApplicationConfig` |
-| `DaoAuthenticationProvider` / `AuthenticationManager` | **Unused** | Beans exist in `ApplicationConfig`; login bypasses them |
-| JWT required on movie/rating endpoints | **No** | All routes are `permitAll()`; tokens are returned but not validated on API calls |
-| `RatingController` uses authenticated principal | **No** | `RatingRequestDto.userId` is supplied in the request body |
+| `JwtAuthenticationFilter` on requests | Yes | Invalid token leaves context empty → `401` on protected routes |
+| JWT required on movie/rating **writes** | Yes | `POST`/`PUT`/`DELETE` movies + rate |
+| JWT required on movie **reads** | No | `GET /api/movies` and `GET /api/movies/{id}` are public |
+| `RatingController` uses authenticated principal | **No** | `RatingRequestDto.userId` is still supplied in the request body |
+| Role-based endpoint rules | **No** | `ROLE_USER` / `ROLE_ADMIN` exist but are not checked in `authorizeHttpRequests` |
 
-**Outdated authentication assumptions to avoid**
+**Assumptions to avoid**
 
-- Do not depict `Client → JWT filter → authenticated endpoint` as the current flow.
+- Do not claim admin-only movie CRUD; any authenticated user can write.
 - Do not show `AuthenticationManager` on the login path; credentials are checked in `AuthServiceImpl`.
-- Do not imply role-based access (`@PreAuthorize`, admin-only movie CRUD) is enforced.
+- Do not imply ratings are bound to the JWT subject; `userId` is still in the body.
 
 ---
 
