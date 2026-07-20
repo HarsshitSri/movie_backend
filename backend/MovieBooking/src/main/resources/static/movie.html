@@ -31,17 +31,11 @@
 
     <section class="panel">
       <h2>Rate this movie</h2>
-      <p class="muted">Requires login. Your user id is filled from the last login when available.</p>
+      <p class="muted">Requires login. The rating is saved for your signed-in account.</p>
       <form id="rate-form">
-        <div class="row">
-          <div class="field">
-            <label for="userId">User ID</label>
-            <input id="userId" type="number" min="1" required />
-          </div>
-          <div class="field">
-            <label for="rating">Rating (1–10)</label>
-            <input id="rating" type="number" min="1" max="10" required />
-          </div>
+        <div class="field">
+          <label for="rating">Rating (1–10)</label>
+          <input id="rating" type="number" min="1" max="10" required />
         </div>
         <button class="btn" type="submit">Submit rating</button>
       </form>
@@ -114,7 +108,6 @@
       clearMessage(msg);
       if (!movieId) return;
       const body = {
-        userId: Number(document.getElementById("userId").value),
         rating: Number(document.getElementById("rating").value)
       };
       try {
@@ -131,11 +124,6 @@
     });
 
     loadMovie();
-
-    const storedUserId = Auth.userId();
-    if (storedUserId) {
-      document.getElementById("userId").value = storedUserId;
-    }
   </script>
 </body>
 </html>

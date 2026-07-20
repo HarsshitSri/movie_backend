@@ -468,15 +468,15 @@ None (empty body)
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| `userId` | `long` | Yes | Not null |
 | `rating` | `integer` | Yes | Not null, min 1, max 10 |
 
 ```json
 {
-  "userId": 1,
   "rating": 9
 }
 ```
+
+> The rated user is taken from the JWT (`SecurityContext`), not from the request body.
 
 #### Response Body (`RatingResponseDto`)
 

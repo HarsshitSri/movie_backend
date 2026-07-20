@@ -408,14 +408,13 @@ JwtAuthenticationFilter (registered before UsernamePasswordAuthenticationFilter)
 | `JwtAuthenticationFilter` on requests | Yes | Invalid token leaves context empty → `401` on protected routes |
 | JWT required on movie/rating **writes** | Yes | `POST`/`PUT`/`DELETE` movies + rate |
 | JWT required on movie **reads** | No | `GET /api/movies` and `GET /api/movies/{id}` are public |
-| `RatingController` uses authenticated principal | **No** | `RatingRequestDto.userId` is still supplied in the request body |
-| Role-based endpoint rules | **No** | `ROLE_USER` / `ROLE_ADMIN` exist but are not checked in `authorizeHttpRequests` |
+| `RatingController` uses authenticated principal | Yes | Rating is bound to the JWT user; body is only `{ "rating": n }` |
+| Role-based endpoint rules | Yes | Movie create/update/delete require `ADMIN`; ratings require authentication |
 
 **Assumptions to avoid**
 
-- Do not claim admin-only movie CRUD; any authenticated user can write.
+- Do not claim any authenticated user can create/update/delete movies; those writes require `ADMIN`.
 - Do not show `AuthenticationManager` on the login path; credentials are checked in `AuthServiceImpl`.
-- Do not imply ratings are bound to the JWT subject; `userId` is still in the body.
 
 ---
 
@@ -428,7 +427,7 @@ POST /api/movies/{movieId}/ratings
     → RatingController (@Valid RatingRequestDto)
     → RatingServiceImpl.rateMovie()
         → MovieRepo.findById(movieId)     → MovieNotFoundException if missing
-        → UserRepo.findById(userId)       → RuntimeException if missing
+        → SecurityContext → current User  → RuntimeException if missing
         → RatingRepository.findByUserAndMovie (upsert)
         → RatingRepository.save(rating)
         → RatingRepository.findByMovie(movie)  (reload all ratings for average)
@@ -438,7 +437,7 @@ POST /api/movies/{movieId}/ratings
     → 201 RatingResponseDto
 ```
 
-**Implementation alignment:** Matches `RatingController` and `RatingServiceImpl`. Rating writes are not tied to the JWT or `SecurityContext`; `userId` comes from the request body.
+**Implementation alignment:** Matches `RatingController` and `RatingServiceImpl`. Rating writes use the authenticated principal from `SecurityContext`.
 
 ---
 

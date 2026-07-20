@@ -14,9 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RatingRequestDto {
 
-    @NotNull(message = "User ID is required.")
-    private Long userId;
-
     @NotNull(message = "Rating is required.")
     @Min(value = 1, message = "Rating must be at least 1.")
     @Max(value = 10, message = "Rating cannot exceed 10.")

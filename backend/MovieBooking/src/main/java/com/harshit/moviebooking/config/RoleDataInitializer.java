@@ -54,30 +54,26 @@ public class RoleDataInitializer implements ApplicationRunner {
     }
 
     private void seedAdminUser() {
+        if (userRepo.existsByEmail(ADMIN_EMAIL)) {
+            return;
+        }
+
         Role adminRole = roleRepo.findByName(RoleName.ADMIN)
                 .orElseThrow(() -> new IllegalStateException("ADMIN role missing"));
 
-        userRepo.findByEmail(ADMIN_EMAIL).ifPresentOrElse(admin -> {
-            admin.setPasswordHash(passwordEncoder.encode(ADMIN_PASSWORD));
-            admin.setRole(adminRole);
-            admin.setAccountStatus(AccountStatus.ACTIVE);
-            admin.setUpdatedAt(LocalDateTime.now());
-            userRepo.save(admin);
-            log.info("Reset admin password for {}", ADMIN_EMAIL);
-        }, () -> {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-            admin.setEmail(ADMIN_EMAIL);
-            admin.setPasswordHash(passwordEncoder.encode(ADMIN_PASSWORD));
-            admin.setRole(adminRole);
-            admin.setDateOfBirth(LocalDate.of(1990, 1, 1));
-            admin.setAccountStatus(AccountStatus.ACTIVE);
-            admin.setCreatedAt(LocalDateTime.now());
-            admin.setUpdatedAt(LocalDateTime.now());
-            userRepo.save(admin);
-            log.info("Seeded admin user {} (password: {})", ADMIN_EMAIL, ADMIN_PASSWORD);
-        });
+        User admin = new User();
+        admin.setUsername("admin");
+        admin.setFirstName("Admin");
+        admin.setLastName("User");
+        admin.setEmail(ADMIN_EMAIL);
+        admin.setPasswordHash(passwordEncoder.encode(ADMIN_PASSWORD));
+        admin.setRole(adminRole);
+        admin.setDateOfBirth(LocalDate.of(1990, 1, 1));
+        admin.setAccountStatus(AccountStatus.ACTIVE);
+        admin.setCreatedAt(LocalDateTime.now());
+        admin.setUpdatedAt(LocalDateTime.now());
+        userRepo.save(admin);
+
+        log.info("Seeded admin user {} (password: {})", ADMIN_EMAIL, ADMIN_PASSWORD);
     }
 }

@@ -83,7 +83,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(RuntimeException ex) {
         String message = ex.getMessage() != null ? ex.getMessage() : "Unexpected error";
-        boolean authFailure = message.toLowerCase().contains("invalid email or password");
+        boolean authFailure = message.toLowerCase().contains("invalid email or password")
+                || message.toLowerCase().contains("account is not active")
+                || message.toLowerCase().contains("please log in first");
         HttpStatus status = authFailure ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
 
         // Avoid leaking raw SQL / JDBC details to the UI

@@ -108,7 +108,7 @@ The initial scaffold (`8fa97a4`) used **Spring Boot 4.1.0** and **Java 26**. The
 |---------|------|
 | Stateless authentication scales horizontally in theory | Token revocation and refresh require additional design (refresh tokens are **planned**, not implemented) |
 | Common pattern for SPA/mobile clients | Secret management and expiration must be configured carefully |
-| Integrates with Spring Security filter model | Role-based rules (`ADMIN` vs `USER`) not applied yet; ratings still accept `userId` in the body |
+| Integrates with Spring Security filter model | Movie writes require `ADMIN`; ratings use the JWT principal (no client-supplied `userId`) |
 
 ---
 

@@ -2,18 +2,22 @@ package com.harshit.moviebooking.service.impl;
 
 import com.harshit.moviebooking.dto.rating.RatingRequestDto;
 import com.harshit.moviebooking.dto.rating.RatingResponseDto;
-import com.harshit.moviebooking.mapper.RatingMapper;
-import com.harshit.moviebooking.repository.MovieRepo;
-import com.harshit.moviebooking.repository.RatingRepository;
-import com.harshit.moviebooking.repository.UserRepo;
-import com.harshit.moviebooking.service.RatingService;
-import org.springframework.stereotype.Service;
 import com.harshit.moviebooking.entity.Movie;
 import com.harshit.moviebooking.entity.Rating;
 import com.harshit.moviebooking.entity.User;
 import com.harshit.moviebooking.exception.MovieNotFoundException;
+import com.harshit.moviebooking.mapper.RatingMapper;
+import com.harshit.moviebooking.repository.MovieRepo;
+import com.harshit.moviebooking.repository.RatingRepository;
+import com.harshit.moviebooking.repository.UserRepo;
+import com.harshit.moviebooking.security.CustomUserDetails;
+import com.harshit.moviebooking.service.RatingService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +45,7 @@ public class RatingServiceImpl implements RatingService {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
 
-        User user = userRepository.findById(requestDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = currentUser();
 
         Optional<Rating> existingRating =
                 ratingRepository.findByUserAndMovie(user, movie);
@@ -69,11 +72,26 @@ public class RatingServiceImpl implements RatingService {
                 .orElse(0.0);
 
         movie.setAverageRating(
-                BigDecimal.valueOf(average).setScale(2, java.math.RoundingMode.HALF_UP));
+                BigDecimal.valueOf(average).setScale(2, RoundingMode.HALF_UP));
         movie.setRatingCount(ratings.size());
 
         movieRepository.save(movie);
 
         return RatingMapper.toResponseDto(savedRating);
+    }
+
+    private User currentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Please log in first.");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails details) {
+            return details.getUser();
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Please log in first."));
     }
 }

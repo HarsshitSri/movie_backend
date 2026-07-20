@@ -102,6 +102,21 @@ class AuthAndMovieApiTest {
         mockMvc.perform(get("/api/movies?page=0&size=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
+
+        mockMvc.perform(post("/api/movies/" + movieId + "/ratings")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "rating": 8 }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.rating").value(8))
+                .andExpect(jsonPath("$.movieId").value(movieId));
+
+        mockMvc.perform(get("/api/movies/" + movieId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.averageRating").value(8.0))
+                .andExpect(jsonPath("$.ratingCount").value(1));
     }
 
     private static String movieJson() {
