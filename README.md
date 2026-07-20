@@ -14,17 +14,19 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | Feature | Status |
 |---------|--------|
 | Register / login with BCrypt + JWT issuance | Done |
+| Inactive accounts rejected at login | Done |
 | Movie CRUD + pagination / sorting | Done |
-| Rate a movie (1–10); updates average & count | Done |
+| Rate a movie (1–10); updates average & count | Done — rating bound to JWT user |
 | Layered architecture, DTOs, validation | Done |
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
-| JWT required on write endpoints | Done — `GET` movies public; create/update/delete need **ADMIN**; ratings need any logged-in user |
-| Basic HTML/CSS/JS UI for navigation | Done — served at `/` |
-| Role-based access (`USER` / `ADMIN`) | Done for movie writes; seeded admin account |
+| JWT + RBAC on write endpoints | Done — `GET` movies public; create/update/delete need **ADMIN**; ratings need any logged-in user |
+| Basic HTML/CSS/JS UI | Done — served at `/` |
+| Seeded demo admin | Done — see credentials below |
+| Friendly API error messages (no raw SQL leaks) | Done |
 | Theatres / booking / payments | Planned |
 
-**Why it is not “just CRUD”:** JWT-protected writes, denormalized rating aggregates, role seeding, and design docs under `docs/`.
+**Why it is not “just CRUD”:** JWT-protected writes, role-based movie admin, denormalized rating aggregates, and design docs under `docs/`.
 
 ---
 
@@ -43,11 +45,12 @@ Or run API + DB together:
 docker compose up -d --build
 ```
 
-API / UI: [http://localhost:8080](http://localhost:8080/)
+- **UI / API:** [http://localhost:8080](http://localhost:8080/)
+- **Demo admin:** `admin@movieplatform.local` / `Admin@12345`
+- **Postgres (Compose):** host port **5434** → container `5432`  
+  Defaults: `jdbc:postgresql://localhost:5434/movie_booking`, user `postgres`, password `000`
 
-**Note:** Compose maps Postgres to host port **5434** (to avoid clashing with a local Postgres on 5432). App defaults use `jdbc:postgresql://localhost:5434/movie_booking` with user `postgres` / password `000`.
-
-Roles (`USER`, `ADMIN`) are seeded automatically on startup. Register via the UI or `POST /api/auth/register`, then use the JWT for write endpoints.
+Roles (`USER`, `ADMIN`) and the demo admin are seeded on first startup (admin is not re-created if it already exists). Register a normal user via the UI or `POST /api/auth/register`.
 
 HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 
@@ -59,7 +62,7 @@ HTTP examples: [docs/quickstart.http](docs/quickstart.http)
 |------------|-----------------|
 | Java | 21 |
 | Spring Boot | 3.5.4 |
-| Spring Security | 6.x (JWT components present) |
+| Spring Security | 6.x + JWT filter |
 | Spring Data JPA | Hibernate |
 | PostgreSQL | 16+ |
 | JWT | JJWT 0.12.7 |
@@ -88,9 +91,9 @@ movie_backend/
 |------|---------|
 | `/` or `/index.html` | Home + navigation |
 | `/movies.html` | Paginated movie list |
-| `/movie.html?id=` | Movie detail, rate, delete |
-| `/movie-form.html` | Create movie (JWT) |
-| `/login.html` / `/register.html` | Auth |
+| `/movie.html?id=` | Detail, rate (logged-in), delete (admin) |
+| `/movie-form.html` | Create movie (**ADMIN** only) |
+| `/login.html` / `/register.html` | Auth (login shows demo admin hint) |
 
 Packages: `controller` → `service` → `repository` → `entity`, plus `dto`, `mapper`, `security`, `config`, `exception`.
 
@@ -99,10 +102,10 @@ Packages: `controller` → `service` → `repository` → `entity`, plus `dto`, 
 ## Architecture (simplified)
 
 ```
-Client → Controller → Service → Repository → PostgreSQL
+Client → Spring Security (JWT) → Controller → Service → Repository → PostgreSQL
 ```
 
-Also in play: request DTOs + `@Valid`, mappers, JWT filter on the security chain, and `GlobalExceptionHandler` for validation / movie-not-found.
+Also in play: request DTOs + `@Valid`, mappers, JWT filter on the security chain, and `GlobalExceptionHandler` for validation, not-found, auth failures, and data integrity errors.
 
 Full request and security flow: [docs/architecture.md](docs/architecture.md)
 
@@ -113,9 +116,9 @@ Full request and security flow: [docs/architecture.md](docs/architecture.md)
 | Table | Purpose |
 |-------|---------|
 | `roles` | `USER`, `ADMIN` |
-| `users` | Accounts (BCrypt `password_hash`) |
+| `users` | Accounts (BCrypt `password_hash`, `account_status`) |
 | `movies` | Catalog + cached `average_rating` / `rating_count` |
-| `ratings` | One rating per user per movie |
+| `ratings` | One rating per user per movie (removed when movie is deleted) |
 
 Details: [docs/database-design.md](docs/database-design.md)
 
@@ -123,16 +126,16 @@ Details: [docs/database-design.md](docs/database-design.md)
 
 ## Authentication
 
-**Implemented:** register, login, BCrypt hashing, JWT generation, JWT filter on the security chain, roles seeded on startup, seeded admin user.
+**Implemented:** register, login, BCrypt hashing, JWT generation, JWT filter, roles seeded on startup, seeded admin user, inactive-account check on login.
 
-**Access rules today**
+**Access rules**
 
 | Endpoints | Auth |
 |-----------|------|
 | `POST /api/auth/**` | Public |
 | `GET /api/movies`, `GET /api/movies/{id}` | Public |
 | Create / update / delete movie | **ADMIN** + Bearer JWT |
-| Rate movie | Any authenticated user + Bearer JWT |
+| Rate movie | Any authenticated user + Bearer JWT (user taken from token) |
 
 **Seeded admin (local/demo):** `admin@movieplatform.local` / `Admin@12345`
 
@@ -172,7 +175,7 @@ curl -s -X POST http://localhost:8080/api/auth/register \
   }'
 ```
 
-### Example: create movie
+### Example: create movie (admin)
 
 ```bash
 curl -s -X POST http://localhost:8080/api/movies \
@@ -192,11 +195,13 @@ curl -s -X POST http://localhost:8080/api/movies \
 
 ### Example: rate a movie
 
+The rated user comes from the JWT — do not send `userId` in the body.
+
 ```bash
 curl -s -X POST http://localhost:8080/api/movies/1/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_HERE" \
-  -d '{"userId": 1, "rating": 9}'
+  -d '{"rating": 9}'
 ```
 
 ---
@@ -230,8 +235,6 @@ set -a && source .env && set +a   # bash
 | `JWT_SECRET` | Signing secret (recommended) |
 | `JWT_EXPIRATION` | Lifetime in ms (optional) |
 
-Then hit the API. Roles are seeded automatically on startup.
-
 More detail: [docs/setup.md](docs/setup.md)
 
 ---
@@ -243,7 +246,7 @@ cd backend/MovieBooking
 ./mvnw test
 ```
 
-Uses H2. Includes a context-load test and an API flow test (USER forbidden on create; ADMIN can create). Manual scenarios: [docs/testing.md](docs/testing.md)
+Uses H2. Covers context load plus an API flow: USER cannot create movies, ADMIN can, and an authenticated user can rate a movie. Manual scenarios: [docs/testing.md](docs/testing.md)
 
 ---
 
@@ -268,8 +271,8 @@ Uses H2. Includes a context-load test and an API flow test (USER forbidden on cr
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| v1 | Auth, movies, ratings, JWT, ADMIN movie writes, Docker, UI | In progress |
-| v2 | Richer admin tooling / OpenAPI | Planned |
+| v1 | Auth, movies, ratings, JWT + ADMIN writes, Docker, UI | Done |
+| v2 | Richer admin tooling / OpenAPI / screenshots | Planned |
 | v3 | Theatres, showtimes, booking | Planned |
 | v4 | Payments, notifications | Planned |
 | v5 | CI/CD, broader tests | Planned |
