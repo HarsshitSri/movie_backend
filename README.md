@@ -22,7 +22,7 @@ Ticket booking (theatres, seats, showtimes) is on the roadmap; it is **not** imp
 | Layered architecture, DTOs, validation | Done |
 | PostgreSQL + Docker Compose | Done |
 | Roles seeded on startup (`USER`, `ADMIN`) | Done |
-| JWT + RBAC on write endpoints | Done — `GET` movies public; create/update/delete need **ADMIN**; ratings need any logged-in user |
+| JWT + RBAC on write endpoints | Done — `GET` movies/reviews public; movie writes need **ADMIN**; ratings, reviews, and watchlist need login |
 | Basic HTML/CSS/JS UI | Done — product-style pages at `/` (Previous/Next movie paging) |
 | Seeded demo admin | Done — see credentials below |
 | Seeded demo movie catalog | Done — **30** titles on startup (adds any missing titles only) |
@@ -220,6 +220,31 @@ curl -s -X POST http://localhost:8080/api/movies/1/ratings \
   -d '{"rating": 9}'
 ```
 
+### Example: write a review
+
+```bash
+curl -s -X POST http://localhost:8080/api/movies/1/reviews \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_HERE" \
+  -d '{"body": "A stunning sci-fi journey."}'
+```
+
+### Example: watchlist
+
+```bash
+# Add
+curl -s -X POST http://localhost:8080/api/watchlist/1 \
+  -H "Authorization: Bearer YOUR_JWT_HERE"
+
+# List mine
+curl -s http://localhost:8080/api/watchlist \
+  -H "Authorization: Bearer YOUR_JWT_HERE"
+
+# Remove
+curl -s -X DELETE http://localhost:8080/api/watchlist/1 \
+  -H "Authorization: Bearer YOUR_JWT_HERE"
+```
+
 ---
 
 ## Run without Docker
@@ -262,7 +287,7 @@ cd backend/MovieBooking
 ./mvnw test
 ```
 
-Uses H2. Covers context load plus an API flow: USER cannot create movies, ADMIN can, and an authenticated user can rate a movie. Manual scenarios: [docs/testing.md](docs/testing.md)
+Uses H2. The API flow test covers register/login, USER forbidden on movie create, ADMIN create, rating, watchlist add/list/remove, and review create/list/delete. Manual scenarios: [docs/testing.md](docs/testing.md)
 
 ---
 
