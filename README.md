@@ -48,6 +48,13 @@ Or run API + DB together:
 docker compose up -d --build
 ```
 
+If `8080` / `5434` are busy:
+
+```bash
+APP_HOST_PORT=8081 DB_HOST_PORT=5435 docker compose up -d --build
+```
+
+More detail: [docs/deployment.md](docs/deployment.md)
 - **UI / API:** [http://localhost:8080](http://localhost:8080/)
 - **Demo admin:** `admin@movieplatform.local` / `Admin@12345`
 - **Postgres (Compose):** host port **5434** → container `5432`  

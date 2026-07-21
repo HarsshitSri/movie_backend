@@ -2,39 +2,38 @@ services:
 
   postgres:
     image: postgres:16
-
     container_name: moviebooking-db
-
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: movie_booking
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "000"
-
+      POSTGRES_DB: ${POSTGRES_DB:-movie_booking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-000}
     ports:
-      - "5434:5432"
-
+      - "${DB_HOST_PORT:-5434}:5432"
     volumes:
       - postgres-data-v2:/var/lib/postgresql/data
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-movie_booking}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
-
     build: .
-
     container_name: moviebooking-api
-
+    restart: unless-stopped
     depends_on:
-      - postgres
-
+      postgres:
+        condition: service_healthy
     ports:
-      - "8080:8080"
-
+      - "${APP_HOST_PORT:-8080}:8080"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/movie_booking
-      DB_USERNAME: postgres
-      DB_PASSWORD: "000"
-      JWT_SECRET: ThisIsAVeryLongSecretKeyForMovieBookingApplication2026
-      JWT_EXPIRATION: 86400000
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-movie_booking}
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-000}
+      JWT_SECRET: ${JWT_SECRET:-ThisIsAVeryLongSecretKeyForMovieBookingApplication2026}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      SERVER_PORT: 8080
 
 volumes:
   postgres-data-v2:

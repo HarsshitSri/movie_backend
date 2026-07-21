@@ -16,17 +16,7 @@ Docker deployment guide for the application in `backend/MovieBooking/`.
 
 ---
 
-## Build Image
-
-From `backend/MovieBooking/`:
-
-```bash
-docker build -t moviebooking .
-```
-
----
-
-## Run with Docker Compose
+## Quick start (recommended)
 
 From `backend/MovieBooking/`:
 
@@ -34,10 +24,18 @@ From `backend/MovieBooking/`:
 docker compose up -d --build
 ```
 
-API: `http://localhost:8080`  
-Postgres: `localhost:5432`
+- **UI / API:** http://localhost:8080  
+- **Postgres (host):** localhost:5434 → container 5432  
 
-Roles are seeded automatically on startup. No manual `INSERT` into `roles` is required for a normal first run.
+Roles, demo admin, and demo movies are seeded automatically on startup.
+
+If ports `8080` or `5434` are already in use on your machine:
+
+```bash
+APP_HOST_PORT=8081 DB_HOST_PORT=5435 docker compose up -d --build
+```
+
+Then open http://localhost:8081
 
 ### Smoke check
 
@@ -45,7 +43,7 @@ Roles are seeded automatically on startup. No manual `INSERT` into `roles` is re
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/movies
 ```
 
-Expect `200` when the API is up. Then register and call protected endpoints with a Bearer token (see [setup.md](setup.md) / [quickstart.http](quickstart.http)).
+Expect `200`. Register or use the demo admin, then call protected endpoints with a Bearer token (see [setup.md](setup.md) / [quickstart.http](quickstart.http)).
 
 Stop services:
 
@@ -53,16 +51,28 @@ Stop services:
 docker compose down
 ```
 
+Data is kept in the `postgres-data-v2` volume. To wipe the database volume as well:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Build image only
+
+```bash
+docker build -t moviebooking .
+```
+
 ---
 
 ## Services
 
-| Service | URL |
-|---------|-----|
+| Service | Default URL |
+|---------|-------------|
 | Application | `http://localhost:8080` |
 | PostgreSQL (host) | `localhost:5434` → container `5432` |
-
-Docker Compose service names:
 
 | Container | Purpose |
 |-----------|---------|
@@ -73,19 +83,21 @@ Docker Compose service names:
 
 ## Environment Variables
 
-Configured in `docker-compose.yml` for the `app` service:
+Set via shell env or a `.env` file next to `docker-compose.yml` (see `.env.example`).
 
-| Variable | Purpose |
-|----------|---------|
-| `DB_URL` | JDBC URL (`jdbc:postgresql://postgres:5432/movie_booking`) |
-| `DB_USERNAME` | Database username |
-| `DB_PASSWORD` | Database password |
-| `JWT_SECRET` | JWT signing secret |
-| `JWT_EXPIRATION` | Token lifetime in milliseconds |
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `APP_HOST_PORT` | Host port for the API | `8080` |
+| `DB_HOST_PORT` | Host port for Postgres | `5434` |
+| `POSTGRES_DB` | Database name | `movie_booking` |
+| `POSTGRES_USER` | Database user | `postgres` |
+| `POSTGRES_PASSWORD` | Database password | `000` (change for any shared/public deploy) |
+| `JWT_SECRET` | JWT signing secret | demo default (change for public deploy) |
+| `JWT_EXPIRATION` | Token lifetime (ms) | `86400000` |
 
-These map to Spring Boot properties via externalized configuration (`spring.datasource.*`, `jwt.*`).
+Inside Compose, the app connects with `jdbc:postgresql://postgres:5432/<db>` (service DNS), not the host port.
 
-For local (non-Docker) setup, see [setup.md](setup.md) and `backend/MovieBooking/.env.example`.
+For local (non-Docker) setup, see [setup.md](setup.md).
 
 ---
 
